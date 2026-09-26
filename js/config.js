@@ -13,8 +13,8 @@ const restaurantConfig = {
   slogan: "No ponto certo, na velocidade certa.",
   description: "Pratos executivos, lanches e bebidas — pedido rápido, sabor de verdade.",
 
-  phone: "(11) 97777-7777",
-  whatsapp: "5511977777777",
+  phone: "(11) 994201654",
+  whatsapp: "5511994201654",
   instagram: "https://instagram.com/pontoexpresso",
 
   address: "Vila Luzita, Santo André — SP",
@@ -25,8 +25,8 @@ const restaurantConfig = {
   ],
 
   pix: {
-    key: "11977777777", // exemplo — trocar pela chave real do restaurante
-    keyType: "Telefone",
+    key: "00020101021126410014br.gov.bcb.pix0119lucaz6846@gmail.com5204000053039865802BR5923LUCAS FERREIRA DA SILVA6011SANTO ANDRE62070503***6304FA04", // exemplo — trocar pela chave real do restaurante
+    keyType: "Aleatoria",
     receiverName: "Ponto Expresso Ltda",
   },
 
