@@ -13,8 +13,8 @@ const restaurantConfig = {
   slogan: "No ponto certo, na velocidade certa.",
   description: "Pratos executivos, lanches e bebidas — pedido rápido, sabor de verdade.",
 
-  phone: "(11) 994201654",
-  whatsapp: "5511994201654",
+  phone: "(11) 994201652",
+  whatsapp: "5511994201652",
   instagram: "https://instagram.com/pontoexpresso",
 
   address: "Vila Luzita, Santo André — SP",
