@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de QR Code — Digital Menu LP</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{ --bg:#14120F; --surface:#1E1B17; --text:#F2EDE4; --accent:#D9873B; --muted:#8A8378; }
+  *{ box-sizing:border-box; }
+  body{
+    font-family:Inter,sans-serif; background:var(--bg); color:var(--text);
+    display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; padding:24px;
+  }
+  .panel{ width:100%; max-width:380px; text-align:center; }
+  h1{ font-size:1.2rem; margin-bottom:4px; }
+  p.hint{ color:var(--muted); font-size:.85rem; margin-bottom:20px; }
+  input{
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid #3a352c;
+    background:var(--surface); color:var(--text); font-size:.9rem; margin-bottom:12px;
+  }
+  input:focus{ outline:2px solid var(--accent); }
+  label{ display:block; text-align:left; font-size:.78rem; color:var(--muted); margin-bottom:6px; }
+  button{
+    width:100%; padding:13px; border:none; border-radius:999px; font-weight:700; font-size:.9rem;
+    cursor:pointer; margin-top:6px;
+  }
+  #generate-btn{ background:var(--accent); color:#14120F; }
+  #print-btn{ background:transparent; color:var(--text); border:1px solid #3a352c; margin-top:10px; display:none; }
+
+  #qr-output{ margin:24px auto 8px; display:flex; justify-content:center; }
+  #qr-label{ font-weight:600; margin-top:8px; display:none; }
+
+  @media print{
+    body{ background:#fff; color:#000; align-items:flex-start; }
+    .no-print{ display:none !important; }
+    .panel{ max-width:none; }
+    #qr-output{ margin-top:40px; }
+    #qr-output canvas, #qr-output img{ width:6cm !important; height:6cm !important; }
+    #qr-label{ display:block !important; color:#000; font-size:1.1rem; margin-top:16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="panel">
+  <div class="no-print">
+    <h1>Gerador de QR Code</h1>
+    <p class="hint">Cole a URL onde o cardápio está publicado e gere o QR pra imprimir na mesa.</p>
+
+    <label for="url-input">URL do cardápio publicado</label>
+    <input id="url-input" type="url" placeholder="https://seurestaurante.com.br/">
+
+    <label for="label-input">Texto abaixo do QR (opcional)</label>
+    <input id="label-input" type="text" placeholder="Aponte a câmera para ver o cardápio">
+
+    <button id="generate-btn">Gerar QR Code</button>
+    <button id="print-btn">Imprimir</button>
+  </div>
+
+  <div id="qr-output"></div>
+  <div id="qr-label"></div>
+</div>
+
+<script>
+  const urlInput = document.getElementById("url-input");
+  const labelInput = document.getElementById("label-input");
+  const output = document.getElementById("qr-output");
+  const labelEl = document.getElementById("qr-label");
+  const printBtn = document.getElementById("print-btn");
+
+  document.getElementById("generate-btn").addEventListener("click", () => {
+    const url = urlInput.value.trim();
+    if (!url) {
+      alert("Cole a URL do cardápio antes de gerar o QR.");
+      return;
+    }
+
+    output.innerHTML = "";
+    // Alto contraste (preto sobre branco) e correção de erro alta —
+    // funciona melhor impresso em qualidade variável de impressora.
+    new QRCode(output, {
+      text: url,
+      width: 260,
+      height: 260,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H,
+    });
+
+    labelEl.textContent = labelInput.value.trim();
+    labelEl.style.display = labelInput.value.trim() ? "block" : "none";
+    printBtn.style.display = "block";
+  });
+
+  printBtn.addEventListener("click", () => window.print());
+</script>
+</body>
+</html>

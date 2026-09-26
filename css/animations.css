@@ -1,0 +1,21 @@
+/* =========================================================
+   ANIMATIONS.CSS — Digital Menu LP
+   Animações discretas. Performance > animação — nada disso
+   deve pesar no carregamento ou distrair da decisão de compra.
+   ========================================================= */
+
+.product-card{ opacity:0; transform:translateY(10px); }
+.product-card.is-visible{
+  opacity:1; transform:translateY(0);
+  transition:opacity .4s var(--ease), transform .4s var(--ease);
+}
+
+#sheet-overlay{ transition:opacity var(--duration) var(--ease); }
+#product-sheet{ transition:transform var(--duration) var(--ease); transform:translateY(16px); }
+#sheet-overlay.is-open #product-sheet{ transform:translateY(0); }
+
+@media (prefers-reduced-motion: reduce){
+  html{ scroll-behavior:auto; }
+  .product-card{ opacity:1; transform:none; transition:none; }
+  #product-sheet{ transition:none; transform:none; }
+}

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ponto Expresso — Cardápio Digital</title>
+<meta name="description" content="Cardápio digital do Ponto Expresso.">
+<meta name="theme-color" content="#14120F">
+
+<meta property="og:title" content="Ponto Expresso — Cardápio Digital">
+<meta property="og:description" content="Pratos executivos, lanches e bebidas em Santo André.">
+<meta property="og:type" content="restaurant.menu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://pontoexpresso.com.br/">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="css/animations.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "name": "Ponto Expresso",
+  "servesCuisine": "Brasileira",
+  "address": { "@type": "PostalAddress", "addressLocality": "Santo André", "addressRegion": "SP", "addressCountry": "BR" }
+}
+</script>
+</head>
+<body>
+
+<!-- ========== HEADER ========== -->
+<header id="header">
+  <div class="brand">
+    <span class="brand-mark" data-brand-mark aria-hidden="true">PE</span>
+    <span class="brand-name" data-brand-name>Ponto Expresso</span>
+  </div>
+  <a href="#" class="whats-link" data-whats-link target="_blank" rel="noopener" aria-label="Chamar no WhatsApp">💬</a>
+</header>
+
+<!-- ========== HERO ========== -->
+<section id="hero">
+  <span class="eyebrow">Cardápio digital</span>
+  <h1 data-brand-name>Ponto Expresso</h1>
+  <p data-slogan>Slogan do restaurante.</p>
+</section>
+
+<!-- ========== NAV DE CATEGORIAS ========== -->
+<nav id="category-nav" aria-label="Categorias do cardápio"></nav>
+
+<main>
+
+  <!-- ========== DESTAQUES ========== -->
+  <section id="destaques">
+    <div class="section-label">Destaques</div>
+    <div class="carousel-track"></div>
+  </section>
+
+  <!-- ========== CATEGORIAS + PRODUTOS ========== -->
+  <div id="menu-categories"></div>
+
+  <!-- ========== INFORMAÇÕES ========== -->
+  <section id="info">
+    <h2>Informações</h2>
+    <div class="info-list">
+      <div class="info-row">📍 <span data-address>Endereço</span></div>
+      <div data-hours-list></div>
+    </div>
+  </section>
+
+  <!-- ========== PIX ========== -->
+  <section id="pix">
+    <h2 style="margin-bottom:14px;">Pague via Pix</h2>
+    <div class="pix-card">
+      <div class="pix-label">Chave Pix (<span id="pix-key-type"></span>)</div>
+      <div class="pix-key" data-pix-key>chave</div>
+      <div class="pix-name" data-pix-name>Nome do recebedor</div>
+      <button type="button" id="pix-copy-btn" class="copy-btn">Copiar chave Pix</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- ========== BARRA DE PEDIDO ========== -->
+<div id="order-bar" aria-live="polite"></div>
+
+<!-- ========== BOTTOM SHEET (detalhe do produto / resumo do pedido) ========== -->
+<div id="sheet-overlay" aria-hidden="true">
+  <div id="product-sheet" role="dialog" aria-modal="true" aria-label="Detalhes"></div>
+</div>
+
+<!-- ========== FOOTER ========== -->
+<footer>
+  <span class="footer-brand" data-brand-name>Ponto Expresso</span>
+  <div class="footer-links">
+    <a href="#" data-whats-link target="_blank" rel="noopener">WhatsApp</a>
+    <a href="#" data-instagram-link target="_blank" rel="noopener">Instagram</a>
+  </div>
+  <p class="fine">Cardápio digital — os preços podem sofrer alteração sem aviso prévio.</p>
+</footer>
+
+<!-- ========== SCRIPTS ========== -->
+<script src="js/config.js"></script>
+<script src="data/menu.js"></script>
+<script src="js/menu-render.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

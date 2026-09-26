@@ -1,0 +1,57 @@
+/* =========================================================
+   VARIABLES.CSS — Digital Menu LP
+   Identidade visual centralizada. Trocar de cliente = editar
+   só este arquivo (cores) + config.js (textos) + menu.js (produtos).
+   ========================================================= */
+
+:root{
+  /* ---- Cores base ---- */
+  --background: #14120F;   /* preto quente — ambiente/brasa, não neutro */
+  --surface:    #1E1B17;   /* cards e superfícies elevadas */
+  --surface-2:  #262117;   /* hover/estados sobre surface */
+
+  /* ---- Cores de marca ---- */
+  --accent:           #D9873B; /* âmbar/copper — apetitoso, cor de crosta grelhada */
+  --accent-secondary: #8C2F26; /* terracota — uso pontual em badges de destaque */
+
+  /* ---- Texto ---- */
+  --text:        #F2EDE4; /* off-white quente */
+  --text-muted:  #8A8378; /* descrições, texto secundário */
+  --on-accent:   #14120F; /* texto sobre fundo âmbar */
+
+  /* ---- Bordas ---- */
+  --border: rgba(242,237,228,0.08);
+  --border-strong: rgba(242,237,228,0.16);
+
+  /* ---- Tipografia ---- */
+  --font-display: 'Fraunces', serif;
+  --font-body:    'Inter', sans-serif;
+
+  --fs-hero:  clamp(1.9rem, 6vw, 3rem);
+  --fs-h2:    clamp(1.4rem, 4vw, 1.9rem);
+  --fs-product-name: 1.05rem;
+  --fs-body:  0.95rem;
+  --fs-small: 0.82rem;
+
+  /* ---- Espaçamentos ---- */
+  --space-xs: 6px;
+  --space-sm: 12px;
+  --space-md: 20px;
+  --space-lg: 36px;
+  --space-xl: 64px;
+
+  /* ---- Raio e sombra ---- */
+  --radius: 16px;
+  --radius-pill: 999px;
+  --shadow-card: 0 10px 30px -14px rgba(0,0,0,0.6);
+
+  /* ---- Layout ---- */
+  --container-max: 640px; /* cardápio é uma experiência de coluna única, mesmo no desktop */
+  --gutter: 20px;
+  --header-h: 60px;
+  --category-nav-h: 52px;
+
+  /* ---- Transições ---- */
+  --ease: cubic-bezier(.22,.9,.32,1);
+  --duration: .25s;
+}

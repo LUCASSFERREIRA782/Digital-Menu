@@ -1,0 +1,25 @@
+/* =========================================================
+   RESPONSIVE.CSS — Digital Menu LP
+   Regras base já são mobile-first em style.css.
+   Aqui ficam só os ajustes de telas maiores.
+   ========================================================= */
+
+@media (min-width:640px){
+  #hero{ padding-top:var(--space-xl); }
+  #product-sheet{
+    border-radius:22px;
+    margin-bottom:var(--space-lg);
+    max-height:80vh;
+  }
+  #sheet-overlay{ align-items:center; }
+}
+
+@media (min-width:900px){
+  :root{ --container-max:760px; }
+}
+
+/* Telas muito pequenas (320px) — reduzir respiro sem quebrar leitura */
+@media (max-width:340px){
+  :root{ --gutter:14px; --space-lg:28px; }
+  #hero h1{ font-size:1.7rem; }
+}
