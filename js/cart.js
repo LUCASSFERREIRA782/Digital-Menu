@@ -90,14 +90,18 @@ function renderOrderSheetContent() {
     <div class="order-items-list">${itemsHTML}</div>
     <div class="order-total-row"><strong>Total</strong><strong>${money(cartTotal())}</strong></div>
 
-    <div class="field-label">Vai consumir onde?</div>
-    <div class="choice-group">
-      ${["local", "viagem"]
+    <div class="field-label">Como vai ser?</div>
+    <div class="choice-group choice-group--3">
+      ${[
+        ["local", "🍽️", "Comer no local"],
+        ["retirada", "🛍️", "Retirar no balcão"],
+        ["entrega", "🛵", "Receber em casa"],
+      ]
         .map(
-          v => `
+          ([v, icone, label]) => `
         <label class="choice-option${orderIdentity.consumo === v ? " is-selected" : ""}">
           <input type="radio" name="consumo" value="${v}" ${orderIdentity.consumo === v ? "checked" : ""}>
-          ${v === "local" ? "Comer no local" : "Para viagem"}
+          <span class="choice-icon">${icone}</span>${label}
         </label>`
         )
         .join("")}
@@ -106,9 +110,26 @@ function renderOrderSheetContent() {
     <label class="field-label" for="order-name">Nome</label>
     <input class="field" id="order-name" type="text" placeholder="Seu nome" value="${orderIdentity.name}">
 
-    <div id="mesa-field-wrapper" style="${orderIdentity.consumo === "viagem" ? "display:none;" : ""}">
+    <div id="mesa-field-wrapper" style="${orderIdentity.consumo === "local" ? "" : "display:none;"}">
       <label class="field-label" for="order-table">Ou número da mesa</label>
       <input class="field" id="order-table" type="text" placeholder="Ex: Mesa 5" value="${orderIdentity.table}">
+    </div>
+
+    <div id="address-fields-wrapper" style="${orderIdentity.consumo === "entrega" ? "" : "display:none;"}">
+      <label class="field-label" for="addr-cep">CEP</label>
+      <input class="field" id="addr-cep" type="text" placeholder="00000-000" value="${orderIdentity.address.cep}">
+
+      <label class="field-label" for="addr-rua">Rua</label>
+      <input class="field" id="addr-rua" type="text" placeholder="Nome da rua" value="${orderIdentity.address.rua}">
+
+      <label class="field-label" for="addr-numero">Número</label>
+      <input class="field" id="addr-numero" type="text" placeholder="Nº da casa/apto" value="${orderIdentity.address.numero}">
+
+      <label class="field-label" for="addr-complemento">Complemento (opcional)</label>
+      <input class="field" id="addr-complemento" type="text" placeholder="Bloco, apto, etc." value="${orderIdentity.address.complemento}">
+
+      <label class="field-label" for="addr-referencia">Ponto de referência (opcional)</label>
+      <input class="field" id="addr-referencia" type="text" placeholder="Próximo a..." value="${orderIdentity.address.referencia}">
     </div>
 
     <div class="field-label">Forma de pagamento</div>
@@ -132,7 +153,13 @@ function renderOrderSheetContent() {
   attachOrderSheetEvents();
 }
 
-const orderIdentity = { name: "", table: "", payment: "pix", consumo: "local" };
+const orderIdentity = {
+  name: "",
+  table: "",
+  payment: "pix",
+  consumo: "local",
+  address: { cep: "", rua: "", numero: "", complemento: "", referencia: "" },
+};
 
 function renderPaymentNote() {
   const note = document.getElementById("payment-note");
@@ -199,9 +226,15 @@ function attachOrderSheetEvents() {
       orderIdentity.consumo = e.target.value;
       container.querySelectorAll('input[name="consumo"]').forEach(r => r.closest(".choice-option").classList.remove("is-selected"));
       e.target.closest(".choice-option").classList.add("is-selected");
-      document.getElementById("mesa-field-wrapper").style.display = orderIdentity.consumo === "viagem" ? "none" : "block";
+      document.getElementById("mesa-field-wrapper").style.display = orderIdentity.consumo === "local" ? "block" : "none";
+      document.getElementById("address-fields-wrapper").style.display = orderIdentity.consumo === "entrega" ? "block" : "none";
     })
   );
+
+  ["cep", "rua", "numero", "complemento", "referencia"].forEach(campo => {
+    const el = document.getElementById(`addr-${campo}`);
+    if (el) el.addEventListener("input", e => (orderIdentity.address[campo] = e.target.value));
+  });
 
   container.querySelectorAll('input[name="payment"]').forEach(radio =>
     radio.addEventListener("change", e => {
@@ -219,22 +252,44 @@ function attachOrderSheetEvents() {
 }
 
 function sendOrderToWhatsApp() {
-  const precisaNome = orderIdentity.consumo === "viagem";
-  if (precisaNome && !orderIdentity.name.trim()) {
-    alert("Preencha seu nome antes de enviar — é como a equipe vai identificar seu pedido para viagem.");
+  const { consumo } = orderIdentity;
+
+  if ((consumo === "retirada" || consumo === "entrega") && !orderIdentity.name.trim()) {
+    alert(
+      consumo === "retirada"
+        ? "Preencha seu nome antes de enviar — é o nome que vai ser chamado no balcão."
+        : "Preencha seu nome antes de enviar — é como a equipe vai identificar seu pedido."
+    );
     return;
   }
-  if (!precisaNome && !orderIdentity.name.trim() && !orderIdentity.table.trim()) {
+  if (consumo === "local" && !orderIdentity.name.trim() && !orderIdentity.table.trim()) {
     alert("Preencha seu nome ou o número da mesa antes de enviar — isso ajuda a equipe a identificar o pedido.");
     return;
   }
+  if (consumo === "entrega") {
+    const a = orderIdentity.address;
+    if (!a.cep.trim() || !a.rua.trim() || !a.numero.trim()) {
+      alert("Preencha CEP, rua e número antes de enviar — a equipe precisa do endereço pra entrega.");
+      return;
+    }
+  }
+
+  const rotuloConsumo = { local: "Comer no local", retirada: "Retirar no balcão", entrega: "Entrega" }[consumo];
 
   const linhas = [];
   linhas.push(`🧾 Novo pedido — ${restaurantConfig.name}`);
   linhas.push("");
-  linhas.push(`Consumo: ${orderIdentity.consumo === "local" ? "Comer no local" : "Para viagem"}`);
+  linhas.push(`Consumo: ${rotuloConsumo}`);
   if (orderIdentity.name.trim()) linhas.push(`Cliente: ${orderIdentity.name.trim()}`);
-  if (orderIdentity.consumo === "local" && orderIdentity.table.trim()) linhas.push(`Mesa: ${orderIdentity.table.trim()}`);
+  if (consumo === "local" && orderIdentity.table.trim()) linhas.push(`Mesa: ${orderIdentity.table.trim()}`);
+
+  if (consumo === "entrega") {
+    const a = orderIdentity.address;
+    linhas.push(`Endereço: ${a.rua.trim()}, ${a.numero.trim()}${a.complemento.trim() ? " - " + a.complemento.trim() : ""}`);
+    linhas.push(`CEP: ${a.cep.trim()}`);
+    if (a.referencia.trim()) linhas.push(`Referência: ${a.referencia.trim()}`);
+  }
+
   linhas.push("");
   linhas.push("Itens:");
   cart.items.forEach(item => {
