@@ -235,6 +235,11 @@ body.has-order-bar{ padding-bottom:74px; }
   transition:background var(--duration) var(--ease), border-color var(--duration) var(--ease);
 }
 .choice-option input{ display:none; }
+.choice-group--3 .choice-option{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; font-size:.76rem; padding:10px 4px; line-height:1.25;
+}
+.choice-icon{ font-size:1.25rem; }
 .choice-option.is-selected{ background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
 .payment-note{
   margin-top:12px; padding:12px 14px; border-radius:10px;
