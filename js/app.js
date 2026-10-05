@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupCategoryNav();
   setupProductSheet();
-  setupPixCopy();
   setupScrollReveal();
   renderOrderBar();
 });
