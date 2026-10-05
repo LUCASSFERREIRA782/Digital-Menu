@@ -240,29 +240,18 @@ body.has-order-bar{ padding-bottom:74px; }
   margin-top:12px; padding:12px 14px; border-radius:10px;
   background:var(--surface-2); font-size:.85rem; color:var(--text-muted); line-height:1.5;
 }
+.payment-note p{ margin-bottom:10px; }
+.pix-copy-btn{
+  width:100%; padding:11px; border-radius:var(--radius-pill);
+  background:var(--accent); color:var(--on-accent); font-weight:700; font-size:.85rem;
+  transition:background var(--duration) var(--ease);
+}
+.pix-copy-btn.is-copied{ background:#4C9A5A; }
 #info{ padding:var(--space-lg) var(--gutter); border-top:1px solid var(--border); }
 #info h2{ margin-bottom:var(--space-sm); }
 #info .info-list{ display:flex; flex-direction:column; gap:10px; }
 #info .info-row{ display:flex; gap:10px; font-size:var(--fs-body); color:var(--text-muted); }
 #info .info-row strong{ color:var(--text); font-weight:600; }
-
-/* ---------- Pix ---------- */
-#pix{ padding:var(--space-lg) var(--gutter); }
-#pix .pix-card{
-  background:var(--surface); border:1px solid var(--border-strong);
-  border-radius:var(--radius); padding:var(--space-md);
-}
-#pix .pix-label{ font-size:var(--fs-small); color:var(--text-muted); margin-bottom:4px; }
-#pix .pix-key{ font-family:var(--font-body); font-weight:600; font-size:1rem; word-break:break-all; }
-#pix .pix-name{ color:var(--text-muted); font-size:var(--fs-small); margin-top:2px; }
-#pix .copy-btn{
-  margin-top:var(--space-sm);
-  width:100%; padding:13px; border-radius:var(--radius-pill);
-  background:var(--accent); color:var(--on-accent); font-weight:700; font-size:.92rem;
-  display:flex; align-items:center; justify-content:center; gap:8px;
-  transition:background var(--duration) var(--ease);
-}
-#pix .copy-btn.is-copied{ background:#4C9A5A; }
 
 /* ---------- Footer ---------- */
 footer{
