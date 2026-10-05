@@ -137,10 +137,51 @@ const orderIdentity = { name: "", table: "", payment: "pix", consumo: "local" };
 function renderPaymentNote() {
   const note = document.getElementById("payment-note");
   if (!note) return;
-  note.innerHTML =
-    orderIdentity.payment === "pix"
-      ? `Pague com a chave Pix <strong>${restaurantConfig.pix.key}</strong> (${restaurantConfig.pix.keyType}) — nome do recebedor: ${restaurantConfig.pix.receiverName}.`
-      : `Por gentileza, dirija-se até o balcão de atendimento para efetuar o pagamento.`;
+
+  if (orderIdentity.payment === "pix") {
+    note.innerHTML = `
+      <p>Pix para <strong>${restaurantConfig.pix.receiverName}</strong> — copie a chave e cole no seu app do banco.</p>
+      <button type="button" id="order-pix-copy-btn" class="pix-copy-btn">Copiar chave Pix</button>`;
+    attachPixCopyHandler();
+  } else {
+    note.innerHTML = `Por gentileza, dirija-se até o balcão de atendimento para efetuar o pagamento.`;
+  }
+}
+
+function attachPixCopyHandler() {
+  const btn = document.getElementById("order-pix-copy-btn");
+  if (!btn) return;
+  const textoOriginal = btn.textContent;
+
+  btn.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(restaurantConfig.pix.key);
+      mostrarCopiado();
+    } catch {
+      const temp = document.createElement("textarea");
+      temp.value = restaurantConfig.pix.key;
+      temp.style.position = "fixed";
+      temp.style.opacity = "0";
+      document.body.appendChild(temp);
+      temp.select();
+      try {
+        document.execCommand("copy");
+        mostrarCopiado();
+      } catch {
+        btn.textContent = "Toque e segure pra copiar";
+      }
+      document.body.removeChild(temp);
+    }
+  });
+
+  function mostrarCopiado() {
+    btn.textContent = "Chave Pix copiada!";
+    btn.classList.add("is-copied");
+    setTimeout(() => {
+      btn.textContent = textoOriginal;
+      btn.classList.remove("is-copied");
+    }, 2000);
+  }
 }
 
 function attachOrderSheetEvents() {
