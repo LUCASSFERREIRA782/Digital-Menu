@@ -33,9 +33,6 @@ function renderIdentity() {
       .join("");
   }
 
-  setText("[data-pix-key]", restaurantConfig.pix.key);
-  setText("[data-pix-name]", restaurantConfig.pix.receiverName);
-  setText("#pix-key-type", restaurantConfig.pix.keyType);
 }
 
 function setText(selector, value) {
