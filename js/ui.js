@@ -65,7 +65,7 @@ function openProductBuilder(p) {
   const halves = p.meioAMeio
     ? [...catalog.todos.values()].filter(x => x.id !== p.id && x.meioAMeio && x.available && x.categoriaSlug === p.categoriaSlug)
     : [];
-  const src = safeUrl(p.image);
+  let src = safeUrl(p.image) || (typeof fotoCache !== "undefined" && typeof fotoCache.get(p.id) === "string" ? fotoCache.get(p.id) : "");
 
   const sizesHTML = sizes && sizes.length > 1
     ? `<fieldset class="field-group">
@@ -170,6 +170,15 @@ function openProductBuilder(p) {
     </div>`, p.name);
 
   document.querySelector("[data-zoom-photo]")?.addEventListener("click", () => openPhotoViewer(src, p.name));
+  // Foto ainda não carregada: busca e coloca no topo do detalhe quando chegar
+  if (!src && p.foto) carregarFoto(p.id).then(url => {
+    const hero = document.querySelector(".sheet-hero--empty");
+    if (!url || !hero) return;
+    src = url;
+    hero.classList.remove("sheet-hero--empty");
+    hero.innerHTML = `<button type="button" class="sheet-hero-zoom" data-zoom-photo aria-label="Ampliar a foto de ${esc(p.name)}"><img src="${esc(url)}" alt="${esc(p.name)}"><span class="zoom-badge" aria-hidden="true">⤢ Ver foto</span></button>`;
+    hero.querySelector("[data-zoom-photo]").addEventListener("click", () => openPhotoViewer(url, p.name));
+  });
   if (!p.available) return;
 
   const form = document.getElementById("builder");
@@ -245,48 +254,51 @@ function openProductBuilder(p) {
 
 /* ---------------- Navegação ---------------- */
 
-function setupCategoryNav() {
+/* Pode ser chamada a cada redesenho do cardápio: o clique é ligado uma vez
+ * só e o observador é refeito para as seções novas. */
+let categoryObserver = null;
+let jumpingUntil = 0; // durante o "pulo" do clique, o destaque não muda
+
+function setCategoryActive(slug) {
   const nav = document.getElementById("category-nav");
   const track = nav.querySelector(".cat-nav-track");
-  const sections = [...document.querySelectorAll(".category")];
-  let jumpingUntil = 0; // durante o "pulo" do clique, o destaque não muda
-
-  const setActive = slug => {
-    nav.querySelectorAll(".cat-chip").forEach(b => {
-      const active = b.dataset.catLink === slug;
-      b.classList.toggle("is-active", active);
-      // Desliza SÓ a barra de categorias (na horizontal). Não usar
-      // scrollIntoView aqui: ele também mexe na rolagem da página e
-      // trava o dedo/mouse do cliente a cada categoria que passa.
-      if (active) {
-        const left = b.offsetLeft - (track.clientWidth - b.offsetWidth) / 2;
-        track.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
-      }
-    });
-  };
-
-  nav.addEventListener("click", e => {
-    const btn = e.target.closest("[data-cat-link]");
-    if (!btn) return;
-    const section = document.getElementById(`cat-${btn.dataset.catLink}`);
-    if (!section) return;
-    // Altura que fica fixa no topo DEPOIS da rolagem (topo + barra de categorias),
-    // e não a posição atual da barra, que ainda está abaixo do banner.
-    const offset = (parseFloat(getComputedStyle(nav).top) || 0) + nav.offsetHeight + 8;
-    const top = section.getBoundingClientRect().top + window.scrollY - offset;
-    jumpingUntil = Date.now() + 900;
-    setActive(btn.dataset.catLink);
-    window.scrollTo({ top, behavior: "smooth" });
+  nav.querySelectorAll(".cat-chip").forEach(b => {
+    const active = b.dataset.catLink === slug;
+    b.classList.toggle("is-active", active);
+    // Desliza SÓ a barra de categorias (na horizontal). Não usar
+    // scrollIntoView aqui: ele também mexe na rolagem da página.
+    if (active) {
+      const left = b.offsetLeft - (track.clientWidth - b.offsetWidth) / 2;
+      track.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+    }
   });
+}
 
-  if (!("IntersectionObserver" in window) || !sections.length) return;
-  const observer = new IntersectionObserver(entries => {
-    if (Date.now() < jumpingUntil) return;
-    entries.forEach(entry => {
-      if (entry.isIntersecting) setActive(entry.target.id.replace("cat-", ""));
+function setupCategoryNav() {
+  const nav = document.getElementById("category-nav");
+  if (!nav.dataset.ready) {
+    nav.dataset.ready = "1";
+    nav.addEventListener("click", e => {
+      const btn = e.target.closest("[data-cat-link]");
+      if (!btn) return;
+      const section = document.getElementById(`cat-${btn.dataset.catLink}`);
+      if (!section) return;
+      // Altura fixa no topo DEPOIS da rolagem (topo + barra de categorias)
+      const offset = (parseFloat(getComputedStyle(nav).top) || 0) + nav.offsetHeight + 8;
+      const top = section.getBoundingClientRect().top + window.scrollY - offset;
+      jumpingUntil = Date.now() + 900;
+      setCategoryActive(btn.dataset.catLink);
+      window.scrollTo({ top, behavior: "smooth" });
     });
+  }
+  const sections = [...document.querySelectorAll(".category")];
+  categoryObserver?.disconnect();
+  if (!("IntersectionObserver" in window) || !sections.length) return;
+  categoryObserver = new IntersectionObserver(entries => {
+    if (Date.now() < jumpingUntil) return;
+    entries.forEach(entry => { if (entry.isIntersecting) setCategoryActive(entry.target.id.replace("cat-", "")); });
   }, { rootMargin: "-40% 0px -55% 0px" });
-  sections.forEach(s => observer.observe(s));
+  sections.forEach(sec => categoryObserver.observe(sec));
 }
 
 function setupReveal() {

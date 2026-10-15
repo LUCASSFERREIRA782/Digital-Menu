@@ -210,7 +210,7 @@ function renderOrderBody() {
   const blocked = !catalog.online
     ? `<p class="notice">Pedidos pelo site estão fora do ar agora. Tente de novo em instantes.</p>`
     : !status.open
-    ? `<p class="notice">Estamos fechados agora${status.opensLabel ? ` e abrimos ${esc(status.opensLabel)}` : ""}. Dá para montar a comanda, mas o envio só abre no horário.${typeof DEMO_KEY !== "undefined" ? " Na demonstração, use “Abrir agora” no painel." : ""}</p>`
+    ? `<p class="notice">Estamos fechados agora${status.opensLabel ? ` e abrimos ${esc(status.opensLabel)}` : ""}. Dá para montar a comanda, mas o envio só abre no horário.${DEMONSTRACAO ? " Na demonstração, use “Abrir agora” no painel." : ""}</p>`
     : "";
 
   body.innerHTML = `
@@ -519,7 +519,7 @@ function pixBoxHTML(o) {
               <span class="pix-meta">Abra o app do banco → Pix → Pix Copia e Cola. Confira o nome da loja antes de confirmar.</span>`,
     manual:  `<label class="pix-meta" for="pix-manual">Não deu para copiar sozinho. Toque no campo, selecione tudo e copie:</label>
               <textarea class="pix-code" id="pix-manual" rows="4" readonly>${esc(o.pixCode)}</textarea>`,
-    error:   typeof DEMO_KEY !== "undefined"
+    error:   DEMONSTRACAO
               ? `<p class="pix-meta">${esc(o.pixError || "Na demonstração o Pix não é gerado.")}</p>`
               : `<p class="pix-meta">Não conseguimos gerar o Pix agora. Você pode pagar na entrega com a maquininha ou pedir o Pix pelo WhatsApp.</p>
               <button type="button" class="btn btn--ghost btn--block" data-retry-pix>Tentar de novo</button>`,

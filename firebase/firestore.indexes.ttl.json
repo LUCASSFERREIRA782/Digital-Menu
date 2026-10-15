@@ -1,0 +1,7 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    { "collectionGroup": "pedidos", "fieldPath": "expiraEm", "ttl": true, "indexes": [] },
+    { "collectionGroup": "resumos", "fieldPath": "expiraEm", "ttl": true, "indexes": [] }
+  ]
+}

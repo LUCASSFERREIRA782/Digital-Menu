@@ -1,0 +1,125 @@
+rules_version = '2';
+
+/**
+ * Regras do Ponto Expresso (demonstração compartilhada).
+ *
+ *  • Leitura pública só do que o cardápio precisa (cardápio, fotos,
+ *    configurações públicas e o nicho escolhido no painel).
+ *  • Escrita: só o dono (UID na lista abaixo) — exceto CRIAR pedido,
+ *    que qualquer cliente pode, dentro de um formato rígido.
+ *  • Pedidos e resumos expiram em 90 dias (TTL no campo expiraEm).
+ *  • Nada fora destes caminhos: tudo negado.
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Dono da demonstração (UID da conta criada no console do Firebase; não é segredo).
+    function isAdmin() {
+      return request.auth != null && request.auth.uid in ['T8F74CRk5gY8f2ro3v61hnBmdtz1'];
+    }
+
+    function nichoValido(n) {
+      return n in ['restaurante', 'pizzaria', 'hamburgueria', 'japones', 'cafeteria', 'doceria', 'pastelaria'];
+    }
+    function texto(v, max) { return v is string && v.size() <= max; }
+
+    // ---------- Nicho escolhido no painel (todos os aparelhos seguem) ----------
+    match /demo/estado {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasOnly(['nicho', 'atualizadoEm'])
+        && nichoValido(request.resource.data.nicho)
+        && request.resource.data.atualizadoEm == request.time;
+    }
+
+    match /nichos/{nicho} {
+      allow read: if nichoValido(nicho);
+      allow write: if isAdmin() && nichoValido(nicho);
+
+      match /categorias/{id} {
+        allow read: if nichoValido(nicho);
+        allow write: if isAdmin() && nichoValido(nicho);
+      }
+      match /produtos/{id} {
+        allow read: if nichoValido(nicho);
+        allow write: if isAdmin() && nichoValido(nicho);
+      }
+
+      // Configurações: públicas só as que o cardápio usa; equipe e Pix são privadas
+      match /config/{id} {
+        allow get: if nichoValido(nicho) && (id in ['adicionais', 'deliveryFees', 'loja', 'mesas'] || isAdmin());
+        allow list: if isAdmin();
+        allow write: if isAdmin() && nichoValido(nicho);
+      }
+
+      // Fotos de produto (plano gratuito: sem Storage). Só imagem, até ~330 KB.
+      match /fotos/{id} {
+        allow read: if nichoValido(nicho);
+        allow delete: if isAdmin();
+        allow create, update: if isAdmin() && nichoValido(nicho)
+          && request.resource.data.keys().hasOnly(['data', 'atualizadoEm'])
+          && request.resource.data.data is string
+          && request.resource.data.data.size() < 450000
+          && request.resource.data.data.matches('^data:image/(webp|jpeg);base64,[A-Za-z0-9+/=]+$');
+      }
+
+      // ---------- Pedidos ----------
+      match /pedidos/{id} {
+        allow get: if nichoValido(nicho);          // acompanhamento pelo id (aleatório, não dá para listar)
+        allow list: if isAdmin();
+        // Cliente: só no formato rígido. Dono: também grava os pedidos de exemplo (histórico).
+        allow create: if nichoValido(nicho) && (isAdmin() || pedidoValido(request.resource.data));
+        allow update: if isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['status', 'pago', 'atualizadoEm', 'preparoEm', 'prontoEm', 'saiuEm', 'concluidoEm', 'canceladoEm'])
+          && request.resource.data.status in ['novo', 'preparo', 'pronto', 'saiu', 'concluido', 'cancelado']
+          && request.resource.data.pago is bool;
+        allow delete: if isAdmin();
+      }
+
+      // Resumo diário (base dos gráficos e do relatório): só o dono
+      match /resumos/{dia} {
+        allow read, write: if isAdmin() && nichoValido(nicho);
+      }
+    }
+
+    // ---------- Formato do pedido feito pelo cliente ----------
+    function itemValido(it) {
+      return it is map
+        && it.keys().hasOnly(['id', 'nome', 'tamanho', 'opcoes', 'adicionais', 'obs', 'qtd', 'unit'])
+        && it.keys().hasAll(['id', 'nome', 'tamanho', 'opcoes', 'adicionais', 'obs', 'qtd', 'unit'])
+        && texto(it.id, 80) && texto(it.nome, 120) && texto(it.tamanho, 40) && texto(it.obs, 120)
+        && it.opcoes is list && it.opcoes.size() <= 10
+        && it.adicionais is list && it.adicionais.size() <= 20
+        && it.qtd is int && it.qtd >= 1 && it.qtd <= 20
+        && it.unit is number && it.unit >= 0 && it.unit <= 10000;
+    }
+    function itemOk(itens, i) { return itens.size() <= i || itemValido(itens[i]); }
+
+    function pedidoValido(d) {
+      return d.keys().hasOnly(['codigo', 'modo', 'pagamento', 'apelido', 'mesa', 'bairro', 'itens',
+                               'subtotal', 'taxaEntrega', 'total', 'status', 'pago', 'criadoEm', 'expiraEm', 'atendente'])
+        && d.keys().hasAll(['codigo', 'modo', 'pagamento', 'apelido', 'mesa', 'bairro', 'itens',
+                            'subtotal', 'taxaEntrega', 'total', 'status', 'pago', 'criadoEm', 'expiraEm'])
+        && d.codigo is string && d.codigo.size() == 4
+        && d.modo in ['local', 'retirada', 'entrega']
+        && ((d.modo == 'entrega' && d.pagamento in ['pix', 'maquininha'])
+            || (d.modo != 'entrega' && d.pagamento in ['caixa_cartao', 'caixa_pix']))
+        && d.apelido is string && d.apelido.size() >= 2 && d.apelido.size() <= 30
+        && texto(d.mesa, 6) && (d.modo == 'local' || d.mesa == '')
+        && texto(d.bairro, 40)
+        && (!('atendente' in d) || texto(d.atendente, 30))
+        && d.itens is list && d.itens.size() >= 1 && d.itens.size() <= 10
+        && itemOk(d.itens, 0) && itemOk(d.itens, 1) && itemOk(d.itens, 2) && itemOk(d.itens, 3) && itemOk(d.itens, 4)
+        && itemOk(d.itens, 5) && itemOk(d.itens, 6) && itemOk(d.itens, 7) && itemOk(d.itens, 8) && itemOk(d.itens, 9)
+        && d.subtotal is number && d.subtotal >= 0 && d.subtotal <= 100000
+        && d.taxaEntrega is number && d.taxaEntrega >= 0 && d.taxaEntrega <= 100
+        && d.total is number && d.total - d.subtotal - d.taxaEntrega < 0.01 && d.total - d.subtotal - d.taxaEntrega > -0.01
+        && d.status == 'novo' && d.pago == false
+        && d.criadoEm == request.time
+        && d.expiraEm is timestamp
+        && d.expiraEm > request.time + duration.value(89, 'd')
+        && d.expiraEm < request.time + duration.value(91, 'd');
+    }
+  }
+}

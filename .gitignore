@@ -1,0 +1,4 @@
+# Arquivos de trabalho que não vão para o site
+*-debug.log
+firebase/.firebase/
+node_modules/

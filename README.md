@@ -37,15 +37,38 @@ A cada envio, troque a versão `?v=` nos links de `index.html`, `admin/index.htm
 
 ## Como a demonstração funciona (e por que é segura)
 
-- **Sem banco na nuvem:** tudo fica no navegador de quem usa (`js/demo-backend.js`).
-  Nenhum visitante altera o que outro vê, não há custo e não há senha.
-- O "servidor" da demonstração (`js/demo-servidor.js`) recalcula preços e taxas a partir do
-  cardápio salvo; valores vindos da tela são ignorados (mesma regra da versão real).
-- **Nenhum Pix é gerado** e **nenhuma mensagem é enviada**: sem WhatsApp cadastrado no painel,
-  o endereço aparece só em prévia.
-- CSP só com o próprio site (+ fontes do Google e consulta de CEP), proteção contra iframe,
-  textos sempre escapados antes de ir para a tela.
-- 3D e QR Code feitos em código próprio, sem bibliotecas de fora.
+- **Firebase `ponto-expresso-demo`** (plano gratuito Spark, banco em São Paulo), **dados compartilhados**:
+  o que o dono muda no painel aparece no celular do cliente; o pedido do cliente chega ao vivo no painel.
+- **Painel com login de verdade** (e-mail e senha). Só o UID do dono, listado em `firebase/firestore.rules`,
+  escreve no banco. O cliente só cria pedido, num formato rígido (campos, tamanhos, data do servidor,
+  validade de 90 dias) — testado em `firebase/tests/regras.test.mjs`.
+- Plano gratuito não tem Cloud Functions: a regra de preço roda em `js/servidor.js` (mesma de `js/precos.js`);
+  na versão de cada cliente (plano Blaze) o preço é recalculado no servidor, como na açaiteria.
+- **Nenhum Pix é gerado** e **nenhuma mensagem é enviada**: sem WhatsApp cadastrado, o endereço aparece só em prévia.
+- CSP restrita (site, Firebase, fontes do Google e consulta de CEP), SDK com SRI, proteção contra iframe,
+  textos sempre escapados; planilha protegida contra fórmulas.
+
+## Painel de gestão e retenção (90 dias)
+
+- Gráficos (aba Relatórios): vendas por dia por tipo de atendimento (linha), tempo médio de preparo × entrega
+  (barras, com a meta de preparo), mais vendidos (rosca) e estoque (indicadores + mapa de calor, reposição "+10").
+- Lê os **resumos diários** (`resumos/AAAA-MM-DD`, gravados quando o pedido é finalizado): no máximo
+  90 leituras para o período todo.
+- **Imprimir / salvar PDF** e **exportar planilha (CSV)** do período (até 90 dias).
+- Pedidos e resumos têm `expiraEm` (+90 dias). No plano gratuito o banco não apaga sozinho (TTL exige
+  cobrança ativada): o painel apaga os vencidos sempre que é aberto (e no botão "Apagar vencidos agora").
+  Com o plano Blaze, a política TTL de `firebase/firestore.indexes.ttl.json` passa a apagar em segundo plano.
+
+## Desempenho
+
+- Cardápio ao vivo com cache local (segunda visita abre na hora) e um redesenho por lote de mudanças.
+- Pedido gravado de uma vez (uma escrita, sem leituras extras); fotos de produto só carregam quando aparecem.
+- Scripts com `defer`, conexão antecipada com o banco e cena 3D só depois do cardápio na tela.
+
+## Testar no computador (sem tocar no banco real)
+
+Emuladores do Firebase + `?emulador=1` no endereço (só em 127.0.0.1). Regras:
+`cd firebase && FIREBASE_TEST_DEPS=<pasta com @firebase/rules-unit-testing> firebase emulators:exec --only firestore --project demo-ponto "node --test tests/regras.test.mjs"`
 
 ## Fotos
 

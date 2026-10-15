@@ -151,8 +151,11 @@ function orderCardHTML(o) {
   const next = NEXT_STATUS[o.modo]?.[o.status];
   const finished = o.status === "concluido" || o.status === "cancelado";
 
+  const meta = Number(storeCache?.metaPreparo) || 20;
+  const atrasado = date && ["novo", "preparo"].includes(o.status) && (Date.now() - date.getTime()) / 60000 > meta;
   return `
-    <article class="o-card o-card--${esc(o.status)}" data-order-id="${esc(o.id)}">
+    <article class="o-card o-card--${esc(o.status)}${atrasado ? " o-card--atrasado" : ""}" data-order-id="${esc(o.id)}">
+      ${atrasado ? `<p class="o-late">Passou da meta de ${meta} min</p>` : ""}
       <header class="o-head">
         <span class="o-code">#${esc(o.codigo || o.id.slice(-4))}</span>
         <span class="o-time">${minutesAgo(date)}</span>
@@ -187,8 +190,7 @@ async function onBoardClick(e) {
     if (e.target.matches("[data-paid]")) {
       await ref.update({ pago: e.target.checked, atualizadoEm: ts() });
     } else if (e.target.closest("[data-next]")) {
-      const next = e.target.closest("[data-next]").dataset.next;
-      await ref.update({ status: next, [`${next}Em`]: ts(), atualizadoEm: ts() });
+      await avancarPedido(order, ref, e.target.closest("[data-next]").dataset.next);
     } else if (e.target.closest("[data-cancel]")) {
       if (!confirm(`Cancelar o pedido #${order?.codigo || ""}?`)) return;
       await ref.update({ status: "cancelado", canceladoEm: ts(), atualizadoEm: ts() });
@@ -223,4 +225,65 @@ function notifyNewOrder(n) {
     osc.start(t + i * 0.16);
     osc.stop(t + i * 0.16 + 0.16);
   });
+}
+
+/* ---------- Avanço do pedido ----------
+ * preparo   → baixa o estoque (transação: nunca fica negativo; zerou = esgotado)
+ * concluido → soma no resumo do dia na MESMA gravação (os gráficos leem
+ *             um documento por dia, não milhares de pedidos)
+ */
+async function avancarPedido(o, ref, next) {
+  const marca = { status: next, [`${next}Em`]: ts(), atualizadoEm: ts() };
+  if (next === "preparo") return baixarEstoqueEIniciar(o, ref, marca);
+  if (next === "concluido") {
+    const b = db.batch();
+    b.update(ref, marca);
+    const { dia, dados } = incrementosDoResumo(o, Date.now());
+    b.set(db.collection("resumos").doc(dia), dados, { merge: true });
+    return b.commit();
+  }
+  return ref.update(marca);
+}
+
+async function baixarEstoqueEIniciar(o, ref, marca) {
+  const ids = [...new Set((o.itens || []).map(i => i.id).filter(Boolean))];
+  await db.runTransaction(async t => {
+    const refs = ids.map(id => db.collection("produtos").doc(id));
+    const snaps = await Promise.all(refs.map(r => t.get(r)));
+    snaps.forEach((snap, k) => {
+      const p = snap.data();
+      if (!p || p.estoque == null) return; // produto sem controle de estoque
+      const qtd = o.itens.filter(i => i.id === ids[k]).reduce((s, i) => s + i.qtd, 0);
+      const estoque = Math.max(0, Number(p.estoque) - qtd);
+      t.update(refs[k], estoque === 0 ? { estoque, available: false } : { estoque });
+    });
+    t.update(ref, marca);
+  });
+}
+
+/** Incrementos do resumo diário para um pedido finalizado agora. */
+function incrementosDoResumo(o, fimMs) {
+  const inc = firebase.firestore.FieldValue.increment;
+  const criado = o.criadoEm?.toMillis?.() ?? fimMs;
+  const dia = diaChave(new Date(criado));
+  const total = Number(o.total || 0);
+  const itens = {};
+  (o.itens || []).forEach(i => {
+    const it = itens[i.nome] ||= { q: 0, f: 0 };
+    it.q += i.qtd; it.f = round2(it.f + i.unit * i.qtd);
+  });
+  const t = temposDoPedido({ ...o, concluidoEm: firebase.firestore.Timestamp.fromMillis(fimMs) });
+  const tempos = {};
+  if (t.preparo != null) tempos.preparo = { s: inc(t.preparo), n: inc(1) };
+  if (t.entrega != null) tempos.entrega = { s: inc(t.entrega), n: inc(1) };
+  return {
+    dia,
+    dados: {
+      dia, pedidos: inc(1), faturamento: inc(total),
+      modos: { [o.modo]: { p: inc(1), f: inc(total) } },
+      itens: Object.fromEntries(Object.entries(itens).map(([nome, v]) => [nome, { q: inc(v.q), f: inc(v.f) }])),
+      tempos,
+      expiraEm: firebase.firestore.Timestamp.fromMillis(new Date(`${dia}T12:00:00`).getTime() + RETENCAO_DIAS * DIA_MS),
+    },
+  };
 }

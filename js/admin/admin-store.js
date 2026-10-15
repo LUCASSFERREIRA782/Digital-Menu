@@ -70,6 +70,7 @@ async function loadStore() {
   document.getElementById("store-slogan").value = storeCache.slogan || restaurantConfig.slogan;
   document.getElementById("store-address").value = storeCache.endereco || restaurantConfig.address;
   document.getElementById("store-instagram").value = storeCache.instagram || restaurantConfig.instagram;
+  document.getElementById("store-meta").value = storeCache.metaPreparo ?? 20;
 }
 
 /* ---------- Horários ---------- */
@@ -193,9 +194,12 @@ async function saveStoreData(e) {
     slogan: document.getElementById("store-slogan").value.trim(),
     endereco: document.getElementById("store-address").value.trim(),
     instagram,
+    metaPreparo: Math.min(180, Math.max(5, parseInt(document.getElementById("store-meta").value, 10) || 20)),
     atualizadoEm: ts(),
   };
   await db.collection("config").doc("loja").set(data, { merge: true });
   document.querySelectorAll("[data-brand-name]").forEach(el => (el.textContent = data.nome));
+  storeCache = { ...storeCache, ...data };
+  if (typeof renderOrders === "function") renderOrders(); // aplica a nova meta no quadro
   showToast("Dados da loja salvos");
 }

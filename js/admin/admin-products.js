@@ -66,16 +66,20 @@ async function loadMenuAdmin() {
       </header>
       ${items.length ? items.map(productRowAdminHTML).join("") : `<p class="a-empty">Nenhum produto nesta categoria.</p>`}
     </section>`).join("");
+  hidratarFotosAdmin();
 }
 
 function productRowAdminHTML(p) {
   const src = safeUrl(p.image);
+  const estoque = p.estoque == null ? "" : Number(p.estoque) <= 0
+    ? `<span class="o-tag o-tag--off">Estoque zerado</span>`
+    : `<span class="o-tag${Number(p.estoque) <= Number(p.estoqueMin || 0) ? " o-tag--warn" : ""}">Estoque ${Number(p.estoque)}</span>`;
   const price = p.sizes?.length
     ? p.sizes.map(s => `${esc(s.label)} ${money(s.price)}`).join(" · ")
     : money(p.price);
   return `
     <div class="a-prod${p.available ? "" : " is-off"}" data-id="${esc(p.id)}">
-      <div class="a-prod-thumb">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : `<span>sem foto</span>`}</div>
+      <div class="a-prod-thumb">${src ? `<img src="${esc(src)}" alt="" loading="lazy">` : p.foto ? `<span data-foto-admin="${esc(p.id)}">…</span>` : `<span>sem foto</span>`}</div>
       <div class="a-prod-info">
         <strong>${esc(p.name)}</strong>
         <span class="a-prod-price">${price}</span>
@@ -85,12 +89,14 @@ function productRowAdminHTML(p) {
           ${p.opcoes?.length ? `<span class="o-tag">${p.opcoes.length} escolha(s)</span>` : ""}
           ${p.meioAMeio ? `<span class="o-tag">Meio a meio</span>` : ""}
           ${p.dias?.length ? `<span class="o-tag">Prato do dia: ${esc(diasTexto(p.dias))}</span>` : ""}
+          ${estoque}
         </span>
       </div>
       <label class="a-switch a-switch--compact" title="Disponível">
         <input type="checkbox" data-toggle-available ${p.available ? "checked" : ""}><span>${p.available ? "Disponível" : "Esgotado"}</span>
       </label>
       <div class="a-prod-actions">
+        ${p.estoque != null ? `<button type="button" class="a-btn a-btn--xs" data-action="restock" title="Repor 10 unidades">+10</button>` : ""}
         <button type="button" class="a-btn a-btn--xs" data-action="edit">Editar</button>
         <button type="button" class="a-btn a-btn--ghost a-btn--xs" data-action="delete">Excluir</button>
       </div>
@@ -113,6 +119,7 @@ async function onProductsListClick(e) {
   }
   const action = e.target.closest("[data-action]")?.dataset.action;
   if (action === "edit") openProductModal(id);
+  if (action === "restock") reporEstoque(id, 10);
   if (action === "delete") deleteProduct(id);
 }
 
@@ -159,6 +166,9 @@ function openProductModal(id = null) {
   document.querySelectorAll("#product-days input").forEach(c => (c.checked = (p?.dias || []).includes(Number(c.value))));
   editingImageUrl = safeUrl(p?.image);
   setPreview(editingImageUrl);
+  if (p?.foto) fotoAdmin(id).then(url => { if (url && document.getElementById("product-id").value === id) setPreview(url); });
+  document.getElementById("product-stock").value = p?.estoque ?? "";
+  document.getElementById("product-stock-min").value = p?.estoqueMin ?? "";
 
   document.getElementById("product-modal").showModal();
 }
@@ -198,9 +208,37 @@ function compressImage(file, maxSide, quality) {
   });
 }
 
-async function deleteStoredImage(url) {
-  if (!url || !url.includes("firebasestorage")) return;
-  try { await storage.refFromURL(url).delete(); } catch (err) { console.warn("Foto antiga não removida:", err.message); }
+/* Fotos: no plano gratuito não há Cloud Storage. A foto (WebP reduzido)
+ * fica em fotos/{id}, separada do cardápio: o cardápio abre leve e cada
+ * foto só é baixada quando aparece. */
+const fotosAdmin = new Map();
+function fotoAdmin(id) {
+  if (!fotosAdmin.has(id)) {
+    fotosAdmin.set(id, db.collection("fotos").doc(id).get().then(s => safeUrl(s.data()?.data)).catch(() => ""));
+  }
+  return fotosAdmin.get(id);
+}
+function hidratarFotosAdmin() {
+  document.querySelectorAll("[data-foto-admin]").forEach(async el => {
+    const url = await fotoAdmin(el.dataset.fotoAdmin);
+    if (url && el.isConnected) el.outerHTML = `<img src="${esc(url)}" alt="" decoding="async">`;
+  });
+}
+const blobParaDataUrl = blob => new Promise((resolve, reject) => {
+  const fr = new FileReader();
+  fr.onload = () => resolve(fr.result);
+  fr.onerror = reject;
+  fr.readAsDataURL(blob);
+});
+
+async function reporEstoque(id, qtd) {
+  const p = productsCache.find(x => x.id === id);
+  if (!p || p.estoque == null) return;
+  await db.collection("produtos").doc(id).update({
+    estoque: firebase.firestore.FieldValue.increment(qtd), available: true, atualizadoEm: ts(),
+  });
+  showToast(`${p.name}: +${qtd} no estoque`);
+  loadMenuAdmin();
 }
 
 async function saveProduct(e) {
@@ -223,6 +261,11 @@ async function saveProduct(e) {
   let opcoes;
   try { opcoes = readGroups(); } catch (err) { errorEl.textContent = err.message; return; }
 
+  // Estoque opcional: vazio = sem controle; zerado = esgotado
+  const lerInteiro = id => { const v = document.getElementById(id).value.trim(); return v === "" ? null : Math.max(0, parseInt(v, 10) || 0); };
+  const estoque = lerInteiro("product-stock");
+  const estoqueMin = estoque == null ? null : lerInteiro("product-stock-min") ?? 0;
+
   const data = {
     name,
     description: document.getElementById("product-description").value.trim(),
@@ -230,7 +273,9 @@ async function saveProduct(e) {
     sizes,
     categoriaSlug: document.getElementById("product-category").value,
     addons: document.getElementById("product-addons").checked,
-    available: document.getElementById("product-available").checked,
+    available: document.getElementById("product-available").checked && estoque !== 0,
+    estoque,
+    estoqueMin,
     featured: document.getElementById("product-featured").checked,
     opcoes,
     meioAMeio: document.getElementById("product-half").checked,
@@ -241,26 +286,28 @@ async function saveProduct(e) {
   btn.disabled = true;
   btn.textContent = editingImageBlob ? "Enviando foto…" : "Salvando…";
   try {
+    const ref = id ? db.collection("produtos").doc(id) : db.collection("produtos").doc();
+    const b = db.batch();
+    data.image = safeUrl(editingImageUrl) && !removeImage && !editingImageBlob ? editingImageUrl : "";
     if (editingImageBlob) {
-      const ext = editingImageBlob.type === "image/webp" ? "webp" : "jpg";
-      const ref = storage.ref(`produtos/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`);
-      await ref.put(editingImageBlob, { contentType: editingImageBlob.type, cacheControl: "public, max-age=31536000" });
-      data.image = await ref.getDownloadURL();
-      if (editingImageUrl) deleteStoredImage(editingImageUrl);
+      const foto = await blobParaDataUrl(editingImageBlob);
+      if (foto.length > 440000) throw new Error("A foto ficou grande demais. Use uma imagem menor.");
+      b.set(db.collection("fotos").doc(ref.id), { data: foto, atualizadoEm: ts() });
+      data.foto = Date.now();
+      fotosAdmin.delete(ref.id);
     } else if (removeImage) {
-      data.image = "";
-      if (editingImageUrl) deleteStoredImage(editingImageUrl);
-    } else {
-      data.image = editingImageUrl;
+      b.delete(db.collection("fotos").doc(ref.id));
+      data.foto = 0;
     }
-
     if (id) {
-      await db.collection("produtos").doc(id).update(data);
+      b.update(ref, data);
     } else {
       data.criadoEm = ts();
       data.ordem = Date.now();
-      await db.collection("produtos").add(data);
+      data.foto ??= 0;
+      b.set(ref, data);
     }
+    await b.commit();
     document.getElementById("product-modal").close();
     showToast("Produto salvo");
     loadMenuAdmin();
@@ -275,8 +322,10 @@ async function saveProduct(e) {
 async function deleteProduct(id) {
   const p = productsCache.find(x => x.id === id);
   if (!confirm(`Excluir "${p?.name}"? Essa ação não pode ser desfeita.`)) return;
-  await db.collection("produtos").doc(id).delete();
-  deleteStoredImage(p?.image);
+  const b = db.batch();
+  b.delete(db.collection("produtos").doc(id));
+  b.delete(db.collection("fotos").doc(id));
+  await b.commit();
   showToast("Produto excluído");
   loadMenuAdmin();
 }

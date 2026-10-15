@@ -9,37 +9,80 @@
 
 const catalog = {
   categorias: [],   // [{ nome, slug, produtos: [...] }]
+  todos: new Map(), // id → produto (inclui os que não são servidos hoje)
   adicionais: [],   // [{ name, price, group }]
   delivery: { ativo: false, retirada: false, modo: "fixo", taxaFixa: 0, bairros: [] },
   online: false,
 };
 
-async function loadCatalog() {
-  try {
-    const [catsSnap, prodSnap, addonsDoc, deliveryDoc, lojaDoc] = await Promise.all([
-      db.collection("categorias").orderBy("ordem").get(),
-      db.collection("produtos").orderBy("ordem").get(),
-      db.collection("config").doc("adicionais").get(),
-      db.collection("config").doc("deliveryFees").get(),
-      db.collection("config").doc("loja").get(),
-    ]);
-    if (lojaDoc.exists) applyStoreConfig(lojaDoc.data());
-
-    const produtos = prodSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    catalog.categorias = catsSnap.docs.map(d => {
-      const cat = d.data();
-      const slug = cat.slug || d.id;
+/**
+ * Escuta o cardápio ao vivo (categorias, produtos e configurações públicas).
+ * A primeira resposta vem do cache local (imediata); as mudanças do painel
+ * chegam sozinhas. Várias mudanças juntas viram UM redesenho (~16 ms) — com
+ * timer, e não requestAnimationFrame, que fica parado em aba escondida.
+ */
+function watchCatalog(onChange) {
+  const raw = { cats: null, prods: null, adicionais: null, delivery: null, loja: null };
+  let frame = 0;
+  const rebuild = () => {
+    frame = 0;
+    if (!raw.cats || !raw.prods) return; // espera o mínimo para desenhar
+    if (raw.loja) applyStoreConfig(raw.loja);
+    const produtos = raw.prods.map(d => ({ id: d.id, ...d.data() }));
+    catalog.todos = new Map(produtos.map(p => [p.id, p]));
+    catalog.categorias = raw.cats.map(d => {
+      const cat = d.data(), slug = cat.slug || d.id;
       return { nome: cat.nome, slug, produtos: produtos.filter(p => p.categoriaSlug === slug && servidoHoje(p)) };
     });
-    catalog.todos = new Map(produtos.map(p => [p.id, p]));
-    catalog.adicionais = addonsDoc.exists ? addonsDoc.data().itens || [] : [];
-    if (deliveryDoc.exists) catalog.delivery = { ...catalog.delivery, ...deliveryDoc.data() };
+    catalog.adicionais = raw.adicionais?.itens || [];
+    catalog.delivery = { ativo: false, retirada: false, modo: "fixo", taxaFixa: 0, bairros: [], ...(raw.delivery || {}) };
     catalog.online = true;
-  } catch (err) {
-    console.error("Cardápio indisponível:", err);
-    catalog.categorias = [];
-    catalog.online = false;
-  }
+    onChange();
+  };
+  const schedule = () => { if (!frame) frame = setTimeout(rebuild, 16); };
+  const fail = err => {
+    console.error("Cardápio indisponível:", err.code || err.message);
+    if (!catalog.online) onChange();
+  };
+  db.collection("categorias").orderBy("ordem").onSnapshot(s => { raw.cats = s.docs; schedule(); }, fail);
+  db.collection("produtos").orderBy("ordem").onSnapshot(s => { raw.prods = s.docs; schedule(); }, fail);
+  db.collection("config").doc("adicionais").onSnapshot(s => { raw.adicionais = s.data() || null; schedule(); }, fail);
+  db.collection("config").doc("deliveryFees").onSnapshot(s => { raw.delivery = s.data() || null; schedule(); }, fail);
+  db.collection("config").doc("loja").onSnapshot(s => { raw.loja = s.data() || null; schedule(); }, fail);
+}
+
+/* ---------------- Fotos (só carregam quando aparecem na tela) ----------------
+ * Plano gratuito: sem Cloud Storage. A foto do produto fica num documento
+ * próprio (fotos/{id}), leve (WebP reduzido), separado do cardápio — o
+ * cardápio abre rápido e cada foto vem só quando o cartão entra na tela.
+ */
+const fotoCache = new Map(); // id → Promise<url> | url
+function carregarFoto(id) {
+  if (fotoCache.has(id)) return Promise.resolve(fotoCache.get(id));
+  const p = db.collection("fotos").doc(id).get()
+    .then(s => { const u = safeUrl(s.data()?.data); fotoCache.set(id, u); return u; })
+    .catch(() => { fotoCache.delete(id); return ""; });
+  fotoCache.set(id, p);
+  return p;
+}
+const fotoVisivel = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if (!en.isIntersecting) return;
+    fotoVisivel.unobserve(en.target);
+    trocarPorFoto(en.target);
+  });
+}, { rootMargin: "200px 0px" }) : null;
+async function trocarPorFoto(el) {
+  const url = await carregarFoto(el.dataset.foto);
+  if (!url || !el.isConnected) return;
+  const img = new Image();
+  img.alt = "";
+  img.decoding = "async";
+  img.src = url;
+  el.replaceWith(img);
+}
+function hidratarFotos(root = document) {
+  root.querySelectorAll("[data-foto]").forEach(el => (fotoVisivel ? fotoVisivel.observe(el) : trocarPorFoto(el)));
 }
 
 /** Dados da loja editados no painel (config/loja) sobrepõem o config.js. */
@@ -165,9 +208,9 @@ function renderCategories() {
 
 function photoHTML(p) {
   const src = safeUrl(p.image);
-  return src
-    ? `<img src="${esc(src)}" alt="" loading="lazy" decoding="async">`
-    : `<span class="photo-fallback" aria-hidden="true"></span>`;
+  if (src) return `<img src="${esc(src)}" alt="" loading="lazy" decoding="async">`;
+  // Foto salva no painel: mostra a ilustração e troca pela foto quando aparecer na tela
+  return `<span class="photo-fallback" aria-hidden="true"${p.foto ? ` data-foto="${esc(p.id)}"` : ""}></span>`;
 }
 
 function productRowHTML(p) {

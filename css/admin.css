@@ -311,8 +311,8 @@ textarea.f-input { resize: vertical; }
 /* Impressão: só os QR Codes das mesas, 3 por linha */
 @media print {
   body { background: #fff; }
-  .a-header, .a-demo-bar, .a-toolbar, .a-footer, .toast, .a-pane:not(#tab-mesas) { display: none !important; }
-  #tab-mesas { display: block !important; padding: 0; }
+  body:not(.is-printing-report) :is(.a-header, .a-demo-bar, .a-toolbar, .a-footer, .toast, .a-pane:not(#tab-mesas)) { display: none !important; }
+  body:not(.is-printing-report) #tab-mesas { display: block !important; padding: 0; }
   .a-tables-grid { grid-template-columns: repeat(3, 1fr); padding: 0; }
   .a-table-card { box-shadow: none; }
   .a-table-link { display: none; }
@@ -329,3 +329,63 @@ textarea.f-input { resize: vertical; }
 .a-niche-chip:hover { transform: translate(-1px, -1px); box-shadow: var(--stamp-sm); }
 .a-niche-chip.is-active { background: var(--ink); color: var(--on-ink); }
 @media (max-width: 760px) { .a-demo-bar > span { flex-basis: 100%; } }
+
+/* ---------- Quadro: pedido que passou da meta de preparo ---------- */
+.o-card--atrasado { box-shadow: 0 0 0 3px var(--danger), var(--stamp-sm); }
+.o-late { margin: 0 0 var(--s-2); padding: 2px 8px; border-radius: var(--r-pill); background: var(--danger); color: var(--on-ink); font-size: var(--fs-xs); font-weight: 700; display: inline-block; }
+.o-tag--warn { background: var(--accent); border-color: var(--accent); }
+
+/* ---------- Painel de gestão ---------- */
+.a-kpi small { display: block; margin-top: 2px; font-size: var(--fs-xs); color: var(--ink-soft); }
+.a-chart--wide { grid-column: 1 / -1; }
+.c-legend { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-4); margin: 0 0 var(--s-2); padding: 0; font-size: var(--fs-sm); }
+.c-legend li { display: flex; align-items: center; gap: 6px; }
+.c-legend i, .c-donut-legend i { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid var(--ink); flex: none; }
+.c-legend b { font-family: var(--font-mono); font-weight: 500; }
+.c-meta { stroke: var(--danger); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.c-meta-label { fill: var(--danger); font-weight: 600; }
+.c-donut { display: grid; grid-template-columns: minmax(150px, 200px) 1fr; gap: var(--s-4); align-items: center; }
+.c-donut svg { width: 100%; height: auto; }
+.c-donut-total { font-family: var(--font-display); font-weight: var(--display-weight); font-size: 18px; fill: var(--ink); }
+.c-donut-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); font-size: var(--fs-sm); }
+.c-donut-legend li { display: grid; grid-template-columns: 12px 1fr auto; column-gap: var(--s-2); align-items: center; }
+.c-donut-legend b { font-family: var(--font-mono); font-weight: 500; }
+.c-donut-legend small { grid-column: 2 / -1; color: var(--ink-soft); font-size: var(--fs-xs); }
+.a-donut-switch { display: flex; justify-content: flex-end; margin: calc(var(--s-2) * -1) var(--s-4) var(--s-4); }
+.a-alert { margin: var(--s-2) 0; padding: var(--s-2) var(--s-3); border: var(--line); border-radius: var(--r-sm); background: color-mix(in srgb, var(--accent) 35%, var(--white)); }
+
+/* Estoque: indicadores + mapa de calor (cor mais forte = mais perto de acabar) */
+.a-stock { margin: 0 var(--s-4) var(--s-4); }
+.a-stock h3 { margin: 0 0 var(--s-3); font-family: var(--font-display); font-weight: var(--display-weight); }
+.a-stock-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--s-2); margin-bottom: var(--s-3); }
+.a-stock-kpi { padding: var(--s-2) var(--s-3); border: var(--line); border-radius: var(--r-sm); background: var(--white); }
+.a-stock-kpi strong { display: block; font-family: var(--font-display); font-weight: var(--display-weight); font-size: var(--fs-xl); line-height: 1.1; }
+.a-stock-kpi span { font-size: var(--fs-xs); color: var(--ink-soft); }
+.a-stock-kpi--ok { border-color: var(--ok); } .a-stock-kpi--baixo { background: color-mix(in srgb, var(--accent) 35%, var(--white)); } .a-stock-kpi--zerado { background: var(--danger); color: var(--on-ink); } .a-stock-kpi--zerado span { color: var(--on-ink); }
+.a-stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s-2); }
+.a-stock-cell {
+  display: grid; gap: 2px; padding: var(--s-2) var(--s-3); border: var(--line); border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--danger) calc((1 - var(--calor)) * 70%), var(--white));
+}
+.a-stock-cell strong { font-size: var(--fs-sm); line-height: 1.2; }
+.a-stock-cell span { font-family: var(--font-mono); font-size: var(--fs-xs); }
+.a-stock-cell .a-btn { justify-self: start; margin-top: var(--s-1); }
+.a-stock-cell--zerado { color: var(--on-ink); background: var(--danger); }
+@media (max-width: 760px) { .c-donut { grid-template-columns: 1fr; } .c-donut svg { max-width: 220px; margin: 0 auto; } }
+
+/* ---------- Relatório impresso / PDF ---------- */
+.a-print-head { display: none; }
+@media print {
+  body.is-printing-report .a-header, body.is-printing-report .a-demo-bar, body.is-printing-report .a-footer,
+  body.is-printing-report .toast, body.is-printing-report .a-pane:not(#tab-relatorios),
+  body.is-printing-report .a-toolbar-right, body.is-printing-report .a-no-print, body.is-printing-report .a-donut-switch,
+  body.is-printing-report .a-stock-cell .a-btn { display: none !important; }
+  body.is-printing-report #tab-relatorios { display: block !important; padding: 0; }
+  body.is-printing-report .a-print-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: var(--s-4); padding-bottom: var(--s-2); border-bottom: var(--line); }
+  body.is-printing-report .a-print-head strong { font-size: var(--fs-xl); }
+  body.is-printing-report .a-chart, body.is-printing-report .a-stock, body.is-printing-report .a-report-table { break-inside: avoid; box-shadow: none; }
+  body.is-printing-report .a-charts { grid-template-columns: 1fr 1fr; }
+  body.is-printing-report details.a-report-table > summary { display: none; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+.a-stock-cell .a-btn { color: var(--ink); background: var(--white); }

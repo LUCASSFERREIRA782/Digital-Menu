@@ -1,11 +1,10 @@
 /**
  * admin-auth.js
- * Entrada no painel + troca de abas.
+ * Login do painel (Firebase Auth, e-mail e senha) + abas.
  *
- * Na demonstração o login é um botão: não existe senha nem conta
- * (os dados ficam só neste navegador). Na versão de cada cliente
- * o login é o da açaiteria: Firebase Auth com e-mail/senha e só
- * entra quem tem a permissão { admin: true }.
+ * Quem decide o acesso são as regras do banco (lista de donos por UID).
+ * Ao entrar, o painel testa uma leitura que só o dono consegue; se a conta
+ * não for do dono, é desconectada na hora.
  */
 
 const loginScreen = document.getElementById("login-screen");
@@ -16,16 +15,40 @@ document.querySelectorAll("[data-brand-name]").forEach(el => (el.textContent = r
 document.querySelectorAll("[data-niche-name]").forEach(el => (el.textContent = NICHO.nome));
 document.title = `Painel — ${restaurantConfig.name} (${NICHO.nome})`;
 
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    loginScreen.hidden = false;
-    adminPanel.hidden = true;
+const AUTH_ERROS = {
+  "auth/invalid-credential": "E-mail ou senha incorretos.",
+  "auth/invalid-login-credentials": "E-mail ou senha incorretos.",
+  "auth/user-not-found": "E-mail ou senha incorretos.",
+  "auth/wrong-password": "E-mail ou senha incorretos.",
+  "auth/invalid-email": "E-mail inválido.",
+  "auth/user-disabled": "Esta conta está desativada.",
+  "auth/too-many-requests": "Muitas tentativas. Espere alguns minutos e tente de novo.",
+  "auth/operation-not-allowed": "O login por e-mail ainda não foi ativado no Firebase (Authentication → Sign-in method).",
+  "auth/network-request-failed": "Sem conexão. Verifique a internet.",
+};
+
+function mostrarLogin(msg = "") {
+  loginScreen.hidden = false;
+  adminPanel.hidden = true;
+  document.getElementById("login-error").textContent = msg;
+}
+
+auth.onAuthStateChanged(async user => {
+  if (!user) { mostrarLogin(); return; }
+  try {
+    await db.collection("config").doc("equipe").get({ source: "server" }); // só o dono consegue
+  } catch (err) {
+    await auth.signOut();
+    mostrarLogin(err.code === "permission-denied"
+      ? "Esta conta não tem acesso ao painel da demonstração."
+      : "Não foi possível conferir o acesso. Verifique a internet.");
     return;
   }
   loginScreen.hidden = true;
   adminPanel.hidden = false;
   if (!adminStarted) {
     adminStarted = true;
+    initDemoAdmin();
     initOrdersAdmin();
     initProductsAdmin();
     initAddonsAdmin();
@@ -33,15 +56,27 @@ auth.onAuthStateChanged(user => {
     initTablesAdmin();
     initStoreAdmin();
     initReportsAdmin();
-    initDemoAdmin();
+    apagarVencidos().then(n => { if (n) showToast(`${n} registro(s) com mais de 90 dias apagados`); })
+      .catch(err => console.warn("Limpeza dos vencidos:", err.code || err.message));
   }
   startOrdersListener();
 });
 
-document.getElementById("demo-login-btn").addEventListener("click", async e => {
-  e.target.disabled = true;
-  await auth.signInDemo();
-  e.target.disabled = false;
+document.getElementById("login-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const errorEl = document.getElementById("login-error");
+  const btn = document.getElementById("login-btn");
+  errorEl.textContent = "";
+  btn.disabled = true;
+  try {
+    await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION); // fechou o navegador = saiu
+    await auth.signInWithEmailAndPassword(document.getElementById("email").value.trim(), document.getElementById("password").value);
+  } catch (err) {
+    errorEl.textContent = AUTH_ERROS[err.code] || "Não foi possível entrar.";
+  } finally {
+    btn.disabled = false;
+    document.getElementById("password").value = "";
+  }
 });
 
 document.getElementById("logout-btn").addEventListener("click", () => {
@@ -65,26 +100,35 @@ document.querySelectorAll("[data-close-modal]").forEach(btn =>
 const ts = () => firebase.firestore.FieldValue.serverTimestamp();
 
 /* ---------- Barra da demonstração: nicho, cardápio e restaurar ----------
- * Só o painel troca o nicho. Um clique: grava neste aparelho, avisa o
- * cardápio aberto em outra aba (que muda na hora) e recarrega o painel
- * com os dados daquele nicho (cada nicho tem cardápio e pedidos próprios).
+ * Só o painel troca o nicho. Um clique grava no banco (todos os aparelhos
+ * com o cardápio aberto mudam juntos) e recarrega o painel com os dados
+ * daquele nicho (cada nicho tem cardápio e pedidos próprios).
  */
 function initDemoAdmin() {
-  escolherNicho(NICHO_ID); // o cardápio aberto neste aparelho segue o painel
+  escolherNicho(NICHO_ID).catch(err => console.warn("Nicho ao vivo:", err.code));
   const wrap = document.getElementById("demo-niches");
   wrap.innerHTML = Object.entries(NICHOS).map(([id, n]) => `
     <button type="button" class="a-niche-chip${id === NICHO_ID ? " is-active" : ""}" role="radio" aria-checked="${id === NICHO_ID}" data-niche="${esc(id)}">${esc(n.nome)}</button>`).join("");
-  wrap.addEventListener("click", e => {
+  wrap.addEventListener("click", async e => {
     const id = e.target.closest("[data-niche]")?.dataset.niche;
     if (!id || id === NICHO_ID) return;
-    escolherNicho(id);
+    wrap.querySelectorAll("button").forEach(b => (b.disabled = true));
+    try { await escolherNicho(id); } catch { showToast("Não foi possível avisar os outros aparelhos"); }
     location.replace(adminUrl(id));
   });
   document.getElementById("demo-menu-link").href = nichoUrl(NICHO_ID);
   document.getElementById("demo-table-link").href = nichoUrl(NICHO_ID, "&mesa=7");
-  document.getElementById("demo-reset-btn").addEventListener("click", () => {
-    if (!confirm("Restaurar cardápio, configurações e pedidos de exemplo deste nicho? O que você mudou aqui será perdido.")) return;
-    DemoStore.reset();
-    location.reload();
+  document.getElementById("demo-reset-btn").addEventListener("click", async e => {
+    if (!confirm(`Restaurar o exemplo de ${NICHO.nome}? Cardápio, configurações e pedidos deste nicho voltam ao original.`)) return;
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try {
+      await restaurarExemplo(msg => (btn.textContent = msg));
+      location.reload();
+    } catch (err) {
+      alert("Não foi possível restaurar: " + (err.code || err.message));
+      btn.disabled = false;
+      btn.textContent = "Restaurar exemplo";
+    }
   });
 }
