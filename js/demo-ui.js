@@ -36,8 +36,9 @@ function seguirNichoDoPainel() {
   const trocar = id => {
     if (!nichoValido(id) || id === NICHO_ID) return;
     lembrarNicho(id); // próxima visita já abre direto no nicho certo
-    const mesa = new URLSearchParams(location.search).get("mesa");
-    location.replace(nichoUrl(id, mesa ? `&mesa=${encodeURIComponent(mesa)}` : ""));
+    // Mantém a mesa do QR (os códigos das mesas da demonstração valem em todos os nichos)
+    const q = new URLSearchParams(location.search), mesa = q.get("mesa"), cod = q.get("c");
+    location.replace(nichoUrl(id, mesa ? `&mesa=${encodeURIComponent(mesa)}${cod ? `&c=${encodeURIComponent(cod)}` : ""}` : ""));
   };
   if (nichoCanal) nichoCanal.onmessage = e => trocar(e.data?.nicho);
   window.addEventListener("storage", e => { if (e.key === NICHO_CHAVE) trocar(e.newValue); });

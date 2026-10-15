@@ -19,7 +19,7 @@ const N = "nichos/pizzaria";
 
 const item = (o = {}) => ({ id: "p1", nome: "Margherita", tamanho: "Broto", opcoes: [], adicionais: [], obs: "", qtd: 1, unit: 44, ...o });
 const pedido = (o = {}) => ({
-  codigo: "AB12", modo: "local", pagamento: "caixa_cartao", apelido: "Ana", mesa: "7", bairro: "",
+  codigo: "AB12", modo: "local", pagamento: "caixa_cartao", apelido: "Ana", mesa: "7", mesaCodigo: "k7Qx2a", bairro: "",
   itens: [item()], subtotal: 44, taxaEntrega: 0, total: 44, status: "novo", pago: false,
   criadoEm: serverTimestamp(), expiraEm: em(90), ...o,
 });
@@ -38,6 +38,8 @@ beforeEach(async () => {
     await setDoc(doc(db, `${N}/produtos/p1`), { name: "Margherita", price: 44 });
     await setDoc(doc(db, `${N}/config/loja`), { nome: "Ponto Expresso" });
     await setDoc(doc(db, `${N}/config/equipe`), { whatsapps: [{ nome: "Ana", numero: "5511900000000" }] });
+    await setDoc(doc(db, `${N}/config/mesas`), { quantidade: 12 });
+    await setDoc(doc(db, `${N}/config/mesasPrivado`), { quantidade: 12, codigos: { "7": "k7Qx2a", "8": "Zp93Lm" } });
     await setDoc(doc(db, `${N}/pedidos/existente`), { ...pedido({ criadoEm: Timestamp.now() }) });
     await setDoc(doc(db, `${N}/resumos/2026-10-15`), { pedidos: 3 });
   });
@@ -67,9 +69,23 @@ describe("leitura pública", () => {
 });
 
 describe("cliente criando pedido", () => {
-  const novo = (o) => setDoc(doc(visitante(), `${N}/pedidos/novo1`), pedido(o));
+  const limpo = o => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
+  const novo = (o) => setDoc(doc(visitante(), `${N}/pedidos/novo1`), limpo(pedido(o)));
   it("pedido válido", async () => { await assertSucceeds(novo()); });
-  it("entrega com pagamento no caixa: recusado", async () => { await assertFails(novo({ modo: "entrega", mesa: "", pagamento: "caixa_cartao" })); });
+  it("entrega com pagamento no caixa: recusado", async () => { await assertFails(novo({ modo: "entrega", mesa: "", mesaCodigo: undefined, pagamento: "caixa_cartao" })); });
+  it("mesa: só com o código do QR daquela mesa", async () => {
+    await assertSucceeds(novo({ mesa: "", mesaCodigo: undefined }));                 // comer no local, sem mesa
+    await assertFails(novo({ mesaCodigo: "errado" }));                             // código inventado
+    await assertFails(novo({ mesa: "8" }));                                        // código de outra mesa
+    await assertFails(novo({ mesa: "99", mesaCodigo: "k7Qx2a" }));                 // mesa que não existe
+    await assertFails(novo({ mesaCodigo: undefined }));                            // mesa digitada, sem QR
+    await assertFails(novo({ modo: "retirada", mesa: "7" }));                      // mesa só no salão
+  });
+  it("códigos das mesas não são públicos", async () => {
+    await assertFails(getDoc(doc(visitante(), `${N}/config/mesasPrivado`)));
+    await assertSucceeds(getDoc(doc(visitante(), `${N}/config/mesas`)));
+    await assertSucceeds(getDoc(doc(dono(), `${N}/config/mesasPrivado`)));
+  });
   it("já pago ou com status adiantado: recusado", async () => {
     await assertFails(novo({ pago: true }));
     await assertFails(novo({ status: "concluido" }));

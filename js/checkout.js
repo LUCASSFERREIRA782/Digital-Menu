@@ -41,11 +41,27 @@ const PAYMENT_LABELS = {
 
 const MODE_LABELS = { local: "Na mesa", retirada: "Retirar no balcão", entrega: "Entrega" };
 
-/** Mesa vinda do QR Code impresso (?mesa=7). Só números/letras curtos. */
-const MESA_DO_QR = (() => {
-  const m = new URLSearchParams(location.search).get("mesa");
-  return m && /^[0-9A-Za-z-]{1,6}$/.test(m) ? m : "";
+/**
+ * Mesa do QR Code impresso: ?mesa=7&c=<código da mesa>.
+ * Sem o código (QR antigo, link digitado) ou com mesa que não existe na loja,
+ * o pedido segue sem mesa — o banco recusa mesa com código errado.
+ */
+const QR_MESA = (() => {
+  const q = new URLSearchParams(location.search);
+  const m = q.get("mesa") || "", c = q.get("c") || "";
+  const ok = /^\d{1,3}$/.test(m) && Number(m) >= 1 && /^[A-Za-z0-9]{6,12}$/.test(c);
+  return { mesa: ok ? String(Number(m)) : "", codigo: ok ? c : "", veio: Boolean(m), invalida: Boolean(m) && !ok };
 })();
+let MESA_DO_QR = QR_MESA.mesa;
+
+/** Com a quantidade de mesas da loja (painel → Mesas), mesa acima dela não vale. */
+function conferirMesaNaLoja(quantidade) {
+  if (MESA_DO_QR && quantidade && Number(MESA_DO_QR) > quantidade) {
+    MESA_DO_QR = "";
+    QR_MESA.invalida = true;
+    if (checkout.mesa) checkout.mesa = "";
+  }
+}
 
 const checkout = {
   modo: MESA_DO_QR ? "local" : "local",
@@ -162,15 +178,13 @@ function renderOrderBody() {
            <span class="legend">Como te chamamos? <span class="req">obrigatório</span></span>
            <input class="field" name="apelido" maxlength="30" autocomplete="off" placeholder="Primeiro nome ou apelido" value="${esc(checkout.apelido)}" required>
          </label>`;
+  // A mesa só vem do QR Code da mesa (não dá para digitar): evita pedido "da mesa 5" feito de fora
   const mesaField = MESA_DO_QR
     ? `<div class="field-group field-group--narrow">
          <span class="legend">Mesa</span>
          <span class="locked-field" title="Mesa do QR Code">${esc(MESA_DO_QR)}</span>
        </div>`
-    : `<label class="field-group field-group--narrow">
-         <span class="legend">Mesa</span>
-         <input class="field" name="mesa" maxlength="6" inputmode="numeric" autocomplete="off" placeholder="Opcional" value="${esc(checkout.mesa)}">
-       </label>`;
+    : "";
 
   const modeFields = checkout.modo === "local"
     ? `<div class="field-row">${nameField}${mesaField}</div>`
@@ -227,7 +241,7 @@ function renderOrderBody() {
         <div class="segmented" role="radiogroup">
           <label class="segment">
             <input type="radio" name="modo" value="local" ${checkout.modo === "local" ? "checked" : ""}>
-            <span>${MESA_DO_QR ? `Mesa ${esc(MESA_DO_QR)}` : "Na mesa"}</span>
+            <span>${MESA_DO_QR ? `Mesa ${esc(MESA_DO_QR)}` : "Comer aqui"}</span>
           </label>
           ${MESA_DO_QR ? "" : `
           <label class="segment${pickupAvailable() ? "" : " is-disabled"}">
@@ -286,7 +300,7 @@ function attachOrderEvents(body) {
   // Campos de texto: só atualiza o estado (sem re-render, para não perder o foco)
   form.addEventListener("input", e => {
     const { name, value } = e.target;
-    if (name === "apelido" || (name === "mesa" && !MESA_DO_QR)) checkout[name] = value;
+    if (name === "apelido") checkout.apelido = value;
     if (name === "cep") {
       const digits = value.replace(/\D/g, "").slice(0, 8);
       e.target.value = digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
@@ -336,7 +350,8 @@ async function submitOrder() {
     modo: checkout.modo,
     pagamento: checkout.pagamento,
     apelido: checkout.apelido.trim().slice(0, 30),
-    mesa: checkout.modo === "local" ? (MESA_DO_QR || checkout.mesa.trim().slice(0, 6)) : "",
+    mesa: checkout.modo === "local" ? MESA_DO_QR : "",
+    mesaCodigo: checkout.modo === "local" && MESA_DO_QR ? QR_MESA.codigo : "",
     bairro: checkout.modo === "entrega" ? (checkout.bairro || "").slice(0, 40) : "",
     itens: cart.items.map(i => ({
       productId: i.productId,
@@ -354,7 +369,6 @@ async function submitOrder() {
     const order = { ...request, ...data, codigo: data.codigo };
     const whatsText = order.modo === "entrega" ? buildWhatsMessage(order) : "";
     wipeAddress();       // endereço já foi copiado para a mensagem; some da memória
-    if (!MESA_DO_QR) checkout.mesa = "";
     clearCart();
     startTracking({ id: data.id, code: data.codigo, modo: order.modo, pagamento: order.pagamento, total: data.total, whatsText,
       whatsNumber: data.atendente?.numero || "" });
@@ -364,7 +378,9 @@ async function submitOrder() {
     renderOrderBody();
     // Mensagens do servidor (loja fechada, esgotado, bairro…) já vêm em português
     const known = ["invalid-argument", "failed-precondition"].some(c => String(err.code).includes(c));
-    document.getElementById("checkout-error").textContent = known
+    const errEl = document.getElementById("checkout-error");
+    if (!errEl) { showToast("Não conseguimos enviar o pedido. Abra a comanda e tente de novo."); return; } // comanda fechada no meio do envio
+    errEl.textContent = known
       ? serverMessage(err)
       : "Não conseguimos enviar o pedido. Confira sua internet e tente de novo.";
     return;

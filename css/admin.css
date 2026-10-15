@@ -389,3 +389,5 @@ textarea.f-input { resize: vertical; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 .a-stock-cell .a-btn { color: var(--ink); background: var(--white); }
+
+.a-table-url { font-family: var(--font-mono); font-size: 9px; color: var(--ink-soft); word-break: break-all; }

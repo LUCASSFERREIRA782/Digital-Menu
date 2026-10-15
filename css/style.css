@@ -639,3 +639,4 @@ textarea.pix-code { width: 100%; resize: none; color: var(--ink); }
   .brand-name { font-size: var(--fs-md); }
   .open-sticker { font-size: .625rem; padding: 4px 8px 3px; letter-spacing: .03em; }
 }
+.table-banner--off { background: var(--paper-deep); font-weight: 500; }

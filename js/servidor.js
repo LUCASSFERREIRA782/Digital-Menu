@@ -40,6 +40,7 @@ const Servidor = {
     const apelido = texto(d.apelido, 30);
     if (apelido.length < 2) servidorFalha("Diga como podemos te chamar.");
     const mesa = modo === "local" ? texto(d.mesa, 6) : "";
+    const mesaCodigo = mesa ? texto(d.mesaCodigo, 12) : "";
     const linhas = Array.isArray(d.itens) ? d.itens : [];
     if (!linhas.length || linhas.length > MAX_LINHAS) servidorFalha(`A comanda precisa ter de 1 a ${MAX_LINHAS} itens.`);
 
@@ -98,11 +99,14 @@ const Servidor = {
       expiraEm: expiraEm(),
     };
     if (atendente?.nome) order.atendente = texto(atendente.nome, 30);
+    if (mesa) order.mesaCodigo = mesaCodigo; // conferido pelas regras com o código impresso da mesa
     try {
       await ref.set(order);
     } catch (err) {
       console.error("Pedido recusado:", err.code, err.message);
-      servidorFalha("Não conseguimos registrar o pedido. Confira os itens e tente de novo.", "failed-precondition");
+      servidorFalha(mesa && err.code === "permission-denied"
+        ? "Este QR Code de mesa não vale mais. Chame um atendente ou peça sem mesa."
+        : "Não conseguimos registrar o pedido. Confira os itens e tente de novo.", "failed-precondition");
     }
     return {
       id: ref.id, codigo, itens, subtotal, taxaEntrega, total, bairro,

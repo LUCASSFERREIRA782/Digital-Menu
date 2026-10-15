@@ -45,7 +45,7 @@ service cloud.firestore {
         allow write: if isAdmin() && nichoValido(nicho);
       }
 
-      // Configurações: públicas só as que o cardápio usa; equipe e Pix são privadas
+      // Configurações: públicas só as que o cardápio usa; equipe, Pix e códigos das mesas são privados
       match /config/{id} {
         allow get: if nichoValido(nicho) && (id in ['adicionais', 'deliveryFees', 'loja', 'mesas'] || isAdmin());
         allow list: if isAdmin();
@@ -68,7 +68,7 @@ service cloud.firestore {
         allow get: if nichoValido(nicho);          // acompanhamento pelo id (aleatório, não dá para listar)
         allow list: if isAdmin();
         // Cliente: só no formato rígido. Dono: também grava os pedidos de exemplo (histórico).
-        allow create: if nichoValido(nicho) && (isAdmin() || pedidoValido(request.resource.data));
+        allow create: if nichoValido(nicho) && (isAdmin() || pedidoValido(request.resource.data, nicho));
         allow update: if isAdmin()
           && request.resource.data.diff(resource.data).affectedKeys()
                .hasOnly(['status', 'pago', 'atualizadoEm', 'preparoEm', 'prontoEm', 'saiuEm', 'concluidoEm', 'canceladoEm'])
@@ -96,8 +96,16 @@ service cloud.firestore {
     }
     function itemOk(itens, i) { return itens.size() <= i || itemValido(itens[i]); }
 
-    function pedidoValido(d) {
-      return d.keys().hasOnly(['codigo', 'modo', 'pagamento', 'apelido', 'mesa', 'bairro', 'itens',
+    // Mesa só vale com o código do QR Code impresso daquela mesa (guardado em
+    // config/mesasPrivado, que o cliente não lê). Sem mesa: sem código.
+    function mesaValida(d, nicho) {
+      return (d.mesa == '' && !('mesaCodigo' in d))
+        || (d.modo == 'local' && d.mesa != '' && d.mesaCodigo is string
+            && d.mesaCodigo == get(/databases/$(database)/documents/nichos/$(nicho)/config/mesasPrivado).data.codigos[d.mesa]);
+    }
+
+    function pedidoValido(d, nicho) {
+      return d.keys().hasOnly(['codigo', 'modo', 'pagamento', 'apelido', 'mesa', 'mesaCodigo', 'bairro', 'itens',
                                'subtotal', 'taxaEntrega', 'total', 'status', 'pago', 'criadoEm', 'expiraEm', 'atendente'])
         && d.keys().hasAll(['codigo', 'modo', 'pagamento', 'apelido', 'mesa', 'bairro', 'itens',
                             'subtotal', 'taxaEntrega', 'total', 'status', 'pago', 'criadoEm', 'expiraEm'])
@@ -106,7 +114,7 @@ service cloud.firestore {
         && ((d.modo == 'entrega' && d.pagamento in ['pix', 'maquininha'])
             || (d.modo != 'entrega' && d.pagamento in ['caixa_cartao', 'caixa_pix']))
         && d.apelido is string && d.apelido.size() >= 2 && d.apelido.size() <= 30
-        && texto(d.mesa, 6) && (d.modo == 'local' || d.mesa == '')
+        && texto(d.mesa, 6) && mesaValida(d, nicho)
         && texto(d.bairro, 40)
         && (!('atendente' in d) || texto(d.atendente, 30))
         && d.itens is list && d.itens.size() >= 1 && d.itens.size() <= 10

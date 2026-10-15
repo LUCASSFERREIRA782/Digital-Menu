@@ -64,7 +64,7 @@ function montarExemplo() {
     statusManual: "aberto", // aberto na apresentação a qualquer hora; "Seguir horários" mostra o automático
   };
   out.config.equipe = { whatsapps: [] };
-  out.config.mesas = { quantidade: 12 };
+  // Mesas (config/mesas e config/mesasPrivado) NÃO entram: restaurar não pode invalidar QR já impresso
 
   // ---- 45 dias de pedidos finalizados + resumos do dia ----
   const vendaveis = Object.entries(out.produtos).filter(([, p]) => p.available && !p.dias.length);
@@ -161,21 +161,24 @@ function temposDoPedido(o) {
   };
 }
 
-/** Apaga todos os documentos de uma subcoleção do nicho (em lotes). */
-async function apagarColecao(nome) {
+/** Apaga os documentos de uma subcoleção do nicho (em lotes), menos os preservados. */
+async function apagarColecao(nome, preservar = []) {
   for (;;) {
     const snap = await db.collection(nome).limit(400).get();
-    if (snap.empty) return;
+    const alvo = snap.docs.filter(d => !preservar.includes(d.id));
+    if (!alvo.length) return;
     const b = db.batch();
-    snap.docs.forEach(d => b.delete(d.ref));
+    alvo.forEach(d => b.delete(d.ref));
     await b.commit();
+    if (snap.size < 400) return;
   }
 }
 
 /** "Restaurar exemplo": apaga o nicho atual e grava a amostra de novo. */
 async function restaurarExemplo(onProgress = () => {}) {
   onProgress("Apagando dados atuais…");
-  for (const c of ["pedidos", "resumos", "produtos", "categorias", "fotos", "config"]) await apagarColecao(c);
+  for (const c of ["pedidos", "resumos", "produtos", "categorias", "fotos"]) await apagarColecao(c);
+  await apagarColecao("config", ["mesas", "mesasPrivado"]); // QR Codes impressos continuam valendo
   const dados = montarExemplo();
   const ops = [];
   for (const [col, docs] of Object.entries(dados)) for (const [id, d] of Object.entries(docs)) ops.push([col, id, d]);

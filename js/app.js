@@ -23,13 +23,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }, true);
 
-  if (MESA_DO_QR) {
-    const banner = document.getElementById("table-banner");
-    banner.hidden = false;
-    banner.querySelector("[data-table-number]").textContent = MESA_DO_QR;
-  }
+  mostrarMesa();
 
   watchCatalog(() => {
+    conferirMesaNaLoja(catalog.mesas);
+    mostrarMesa();
     renderIdentity(); // horários, nome e status vindos do painel
     renderCategoryNav();
     renderFeatured();
@@ -46,3 +44,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const start3D = () => (NICHO.foto ? startPhoto3D(stage, NICHO.foto, () => startHero3D(stage, NICHO.cena)) : startHero3D(stage, NICHO.cena));
   ("requestIdleCallback" in window) ? requestIdleCallback(start3D, { timeout: 1200 }) : setTimeout(start3D, 300);
 });
+
+/** Aviso da mesa: "Você está na Mesa 7" ou QR inválido/antigo. */
+function mostrarMesa() {
+  const banner = document.getElementById("table-banner");
+  if (MESA_DO_QR) {
+    banner.hidden = false;
+    banner.classList.remove("table-banner--off");
+    banner.innerHTML = `<span>Você está na</span> <strong>Mesa ${esc(MESA_DO_QR)}</strong> <span>· o pedido vai direto para a cozinha</span>`;
+  } else if (QR_MESA.invalida) {
+    banner.hidden = false;
+    banner.classList.add("table-banner--off");
+    banner.textContent = "Este QR Code de mesa não é válido aqui. Dá para pedir normalmente; avise o atendente da sua mesa.";
+  }
+}

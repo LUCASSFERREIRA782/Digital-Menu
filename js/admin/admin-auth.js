@@ -117,7 +117,7 @@ function initDemoAdmin() {
     location.replace(adminUrl(id));
   });
   document.getElementById("demo-menu-link").href = nichoUrl(NICHO_ID);
-  document.getElementById("demo-table-link").href = nichoUrl(NICHO_ID, "&mesa=7");
+  // Link da mesa de demonstração: preenchido com o código em admin-mesas.js
   document.getElementById("demo-reset-btn").addEventListener("click", async e => {
     if (!confirm(`Restaurar o exemplo de ${NICHO.nome}? Cardápio, configurações e pedidos deste nicho voltam ao original.`)) return;
     const btn = e.currentTarget;

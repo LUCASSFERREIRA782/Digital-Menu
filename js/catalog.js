@@ -22,7 +22,7 @@ const catalog = {
  * timer, e não requestAnimationFrame, que fica parado em aba escondida.
  */
 function watchCatalog(onChange) {
-  const raw = { cats: null, prods: null, adicionais: null, delivery: null, loja: null };
+  const raw = { cats: null, prods: null, adicionais: null, delivery: null, loja: null, mesas: null };
   let frame = 0;
   const rebuild = () => {
     frame = 0;
@@ -36,6 +36,7 @@ function watchCatalog(onChange) {
     });
     catalog.adicionais = raw.adicionais?.itens || [];
     catalog.delivery = { ativo: false, retirada: false, modo: "fixo", taxaFixa: 0, bairros: [], ...(raw.delivery || {}) };
+    catalog.mesas = Number(raw.mesas?.quantidade) || 0;
     catalog.online = true;
     onChange();
   };
@@ -49,6 +50,7 @@ function watchCatalog(onChange) {
   db.collection("config").doc("adicionais").onSnapshot(s => { raw.adicionais = s.data() || null; schedule(); }, fail);
   db.collection("config").doc("deliveryFees").onSnapshot(s => { raw.delivery = s.data() || null; schedule(); }, fail);
   db.collection("config").doc("loja").onSnapshot(s => { raw.loja = s.data() || null; schedule(); }, fail);
+  db.collection("config").doc("mesas").onSnapshot(s => { raw.mesas = s.data() || null; schedule(); }, fail);
 }
 
 /* ---------------- Fotos (só carregam quando aparecem na tela) ----------------

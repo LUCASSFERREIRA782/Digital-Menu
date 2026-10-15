@@ -9,15 +9,15 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <!-- Política de segurança: só arquivos deste site e as fontes do Google. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src https://ponto-expresso-demo.firebaseapp.com">
-<script src="../js/frame-guard.js?v=20261016b"></script>
-<script src="../js/nichos.js?v=20261016b"></script>
+<script src="../js/frame-guard.js?v=20261016c"></script>
+<script src="../js/nichos.js?v=20261016c"></script>
 <meta name="theme-color" content="#1F2A24">
 <title>Painel — Ponto Expresso</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=DM+Mono:wght@400;500&family=Familjen+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/tokens.css?v=20261016b">
-<link rel="stylesheet" href="../css/admin.css?v=20261016b">
+<link rel="stylesheet" href="../css/tokens.css?v=20261016c">
+<link rel="stylesheet" href="../css/admin.css?v=20261016c">
 </head>
 <body>
 
@@ -188,8 +188,9 @@
           <button type="submit" class="a-btn a-btn--ink a-btn--sm">Gerar</button>
         </form>
         <button type="button" class="a-btn a-btn--accent" id="print-tables-btn">Imprimir</button>
+        <button type="button" class="a-btn a-btn--ghost a-btn--sm" id="tables-new-codes-btn" title="Use se algum QR foi copiado ou trocado">Gerar novos códigos</button>
       </div>
-      <p class="a-hint">Cada QR abre o cardápio já com o número da mesa: o pedido chega no quadro com "Mesa N", sem o cliente digitar nada. Cole em cada mesa (dica: plastifique).</p>
+      <p class="a-hint">Cada QR abre o cardápio já com a mesa e um código só dela: o pedido chega no quadro com "Mesa N" e ninguém pede "da mesa" de fora da loja. Imprima com o endereço em texto embaixo (o cliente confere) e use adesivo que rasga ao ser removido.</p>
       <p class="a-hint" id="tables-hint"></p>
     </div>
     <div class="a-tables-grid" id="tables-grid"></div>
@@ -417,20 +418,20 @@
 <script defer src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js" integrity="sha384-aUtWR1iCiOCHS8pn1nKNXMZm3I/eDrV63IXWXgE+mHHqJfYTWYV+jGk0sCXz57+U" crossorigin="anonymous"></script>
 <script defer src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js" integrity="sha384-ZRqyA8Xkw0A6FmVya9A0Werzt9yjKKAp2TCzqVJjHK1O3oyb0z9jMxpkWPVoFtUm" crossorigin="anonymous"></script>
 <script defer src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js" integrity="sha384-jxdN9nS+cvQavyzo/bNcMoHfxvk0kWtPAfPDRq3EQ/wvbCVLNheaVIphKWMD4/g0" crossorigin="anonymous"></script>
-<script defer src="../js/config.js?v=20261016b"></script>
-<script defer src="../js/utils.js?v=20261016b"></script>
-<script defer src="../js/precos.js?v=20261016b"></script>
-<script defer src="../js/backend.js?v=20261016b"></script>
-<script defer src="../js/demo-ui.js?v=20261016b"></script>
-<script defer src="../js/qr.js?v=20261016b"></script>
-<script defer src="../js/admin/admin-exemplo.js?v=20261016b"></script>
-<script defer src="../js/admin/admin-auth.js?v=20261016b"></script>
-<script defer src="../js/admin/admin-orders.js?v=20261016b"></script>
-<script defer src="../js/admin/admin-products.js?v=20261016b"></script>
-<script defer src="../js/admin/admin-addons.js?v=20261016b"></script>
-<script defer src="../js/admin/admin-delivery.js?v=20261016b"></script>
-<script defer src="../js/admin/admin-mesas.js?v=20261016b"></script>
-<script defer src="../js/admin/admin-store.js?v=20261016b"></script>
-<script defer src="../js/admin/admin-reports.js?v=20261016b"></script>
+<script defer src="../js/config.js?v=20261016c"></script>
+<script defer src="../js/utils.js?v=20261016c"></script>
+<script defer src="../js/precos.js?v=20261016c"></script>
+<script defer src="../js/backend.js?v=20261016c"></script>
+<script defer src="../js/demo-ui.js?v=20261016c"></script>
+<script defer src="../js/qr.js?v=20261016c"></script>
+<script defer src="../js/admin/admin-exemplo.js?v=20261016c"></script>
+<script defer src="../js/admin/admin-auth.js?v=20261016c"></script>
+<script defer src="../js/admin/admin-orders.js?v=20261016c"></script>
+<script defer src="../js/admin/admin-products.js?v=20261016c"></script>
+<script defer src="../js/admin/admin-addons.js?v=20261016c"></script>
+<script defer src="../js/admin/admin-delivery.js?v=20261016c"></script>
+<script defer src="../js/admin/admin-mesas.js?v=20261016c"></script>
+<script defer src="../js/admin/admin-store.js?v=20261016c"></script>
+<script defer src="../js/admin/admin-reports.js?v=20261016c"></script>
 </body>
 </html>
