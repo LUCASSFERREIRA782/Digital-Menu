@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<!-- Política de segurança: só arquivos deste site e as fontes do Google. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'">
+<script src="../js/frame-guard.js"></script>
+<script src="../js/nichos.js"></script>
+<meta name="theme-color" content="#1F2A24">
+<title>Painel — Ponto Expresso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=DM+Mono:wght@400;500&family=Familjen+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/tokens.css">
+<link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<section id="login-screen" class="login" hidden>
+  <div class="login-card">
+    <span class="login-kicker">Painel da loja · demonstração</span>
+    <h1 data-brand-name>Ponto Expresso</h1>
+    <p class="a-hint">Nicho: <strong data-niche-name></strong>. Na versão da sua loja, a entrada é com e-mail e senha só da sua equipe. Aqui é só clicar: os dados ficam apenas neste navegador.</p>
+    <button type="button" class="a-btn a-btn--ink a-btn--block" id="demo-login-btn">Entrar na demonstração</button>
+  </div>
+</section>
+
+<!-- ===== PAINEL ===== -->
+<section id="admin-panel" hidden>
+  <header class="a-header">
+    <div class="a-brand">
+      <span class="a-brand-dot" aria-hidden="true"></span>
+      <span data-brand-name>Ponto Expresso</span>
+    </div>
+    <nav class="a-tabs" role="tablist">
+      <button class="a-tab is-active" data-tab="pedidos" role="tab">Pedidos <span class="a-count" id="new-count" hidden></span></button>
+      <button class="a-tab" data-tab="cardapio" role="tab">Cardápio</button>
+      <button class="a-tab" data-tab="adicionais" role="tab">Adicionais</button>
+      <button class="a-tab" data-tab="entrega" role="tab">Entrega e retirada</button>
+      <button class="a-tab" data-tab="mesas" role="tab">Mesas e QR</button>
+      <button class="a-tab" data-tab="loja" role="tab">Loja e equipe</button>
+      <button class="a-tab" data-tab="relatorios" role="tab">Relatórios e dados</button>
+    </nav>
+    <button id="logout-btn" class="a-btn a-btn--ghost a-btn--sm">Sair</button>
+  </header>
+
+  <div class="a-demo-bar">
+    <span><strong>Demonstração</strong> · dados só neste navegador</span>
+    <label class="a-inline-label">Nicho <select class="f-input f-input--sm" id="demo-niche" aria-label="Nicho da demonstração"></select></label>
+    <a class="a-btn a-btn--sm" id="demo-menu-link" href="../" target="_blank" rel="noopener">Abrir o cardápio ↗</a>
+    <button type="button" class="a-btn a-btn--ghost a-btn--sm" id="demo-reset-btn">Restaurar exemplo</button>
+  </div>
+
+  <!-- ABA: PEDIDOS -->
+  <div class="a-pane is-active" id="tab-pedidos">
+    <div class="a-toolbar">
+      <h2>Pedidos</h2>
+      <div class="a-toolbar-right">
+        <label class="a-switch"><input type="checkbox" id="sound-toggle" checked><span>Som de novo pedido</span></label>
+        <select class="f-input f-input--sm" id="orders-range" aria-label="Período dos pedidos">
+          <option value="1">Hoje</option>
+          <option value="2">Ontem e hoje</option>
+          <option value="7">Últimos 7 dias</option>
+          <option value="30">Últimos 30 dias</option>
+        </select>
+      </div>
+      <p class="a-hint">Pedidos em andamento aparecem sempre, de qualquer dia. O período vale para os finalizados. Todos ficam guardados até você apagar em "Relatórios e dados". Faça um pedido no cardápio (outra aba) e veja ele chegar aqui.</p>
+    </div>
+    <div class="board" id="orders-board">
+      <section class="board-col" data-col="novo"><h3>Novos</h3><div class="board-list"></div></section>
+      <section class="board-col" data-col="preparo"><h3>Preparando</h3><div class="board-list"></div></section>
+      <section class="board-col" data-col="pronto"><h3>Pronto · Saiu</h3><div class="board-list"></div></section>
+      <section class="board-col board-col--done" data-col="fim"><h3>Finalizados</h3><div class="board-list"></div></section>
+    </div>
+    <p class="a-summary" id="orders-summary"></p>
+  </div>
+
+  <!-- ABA: CARDÁPIO -->
+  <div class="a-pane" id="tab-cardapio">
+    <div class="a-toolbar">
+      <h2>Cardápio</h2>
+      <div class="a-toolbar-right">
+        <button id="new-category-btn" class="a-btn a-btn--sm">+ Categoria</button>
+        <button id="new-product-btn" class="a-btn a-btn--accent">+ Produto</button>
+      </div>
+    </div>
+    <div id="products-list"></div>
+  </div>
+
+  <!-- ABA: ADICIONAIS -->
+  <div class="a-pane" id="tab-adicionais">
+    <div class="a-toolbar">
+      <h2>Adicionais</h2>
+      <p class="a-hint">Valem para todo produto marcado com "aceita adicionais". Preço 0 = grátis.</p>
+    </div>
+    <form id="addons-form" class="a-card">
+      <div class="a-table-head a-addon-grid"><span>Nome</span><span>Grupo</span><span>Preço (R$)</span><span></span></div>
+      <div id="addons-list"></div>
+      <div class="a-form-actions">
+        <button type="button" id="add-addon-btn" class="a-btn a-btn--sm">+ Adicional</button>
+        <button type="submit" class="a-btn a-btn--ink">Salvar adicionais</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ABA: ENTREGA -->
+  <div class="a-pane" id="tab-entrega">
+    <div class="a-toolbar"><h2>Entrega e retirada</h2></div>
+    <form id="delivery-form" class="a-card a-card--narrow">
+      <label class="a-switch a-switch--lg"><input type="checkbox" id="pickup-ativo"><span>Aceitar retirada no balcão</span></label>
+      <label class="a-switch a-switch--lg"><input type="checkbox" id="delivery-ativo"><span>Aceitar pedidos de entrega</span></label>
+
+      <label class="f-label" for="delivery-modo">Como cobrar a taxa</label>
+      <select class="f-input" id="delivery-modo">
+        <option value="fixo">Taxa única para todos</option>
+        <option value="bairro">Por bairro (cliente escolhe na lista)</option>
+      </select>
+
+      <div id="delivery-fixo-fields">
+        <label class="f-label" for="taxa-fixa">Taxa (R$) — 0 para grátis</label>
+        <input class="f-input" id="taxa-fixa" type="number" step="0.50" min="0">
+      </div>
+
+      <div id="delivery-bairro-fields" hidden>
+        <span class="f-label">Bairros atendidos</span>
+        <div id="bairros-list"></div>
+        <button type="button" id="add-bairro-btn" class="a-btn a-btn--sm">+ Bairro</button>
+      </div>
+
+      <p class="a-hint">Pagamento na entrega: Pix (o site gera o copia e cola com o valor) ou maquininha levada pelo entregador.</p>
+      <button type="submit" class="a-btn a-btn--ink">Salvar entrega e retirada</button>
+    </form>
+
+    <div class="a-toolbar"><h2>Pix da loja</h2></div>
+    <form id="pix-form" class="a-card a-card--narrow" autocomplete="off">
+      <p class="a-hint">Na versão da sua loja, a chave fica protegida no servidor (não aparece no site nem no GitHub) e o cliente de entrega recebe o Pix copia e cola com o valor exato do pedido. <strong>Nesta demonstração nada é salvo e nenhum Pix é gerado.</strong></p>
+
+      <label class="f-label" for="pix-key-type">Tipo de chave</label>
+      <select class="f-input" id="pix-key-type">
+        <option value="telefone">Telefone</option>
+        <option value="email">E-mail</option>
+        <option value="cpf">CPF</option>
+        <option value="cnpj">CNPJ</option>
+        <option value="aleatoria">Chave aleatória</option>
+      </select>
+
+      <label class="f-label" for="pix-key">Chave Pix</label>
+      <input class="f-input" id="pix-key" maxlength="77" spellcheck="false" required>
+      <span class="a-hint" id="pix-key-hint"></span>
+
+      <div class="a-grid-2">
+        <div>
+          <label class="f-label" for="pix-name">Nome do recebedor <small>(até 25 letras)</small></label>
+          <input class="f-input" id="pix-name" maxlength="25" required>
+        </div>
+        <div>
+          <label class="f-label" for="pix-city">Cidade <small>(até 15 letras)</small></label>
+          <input class="f-input" id="pix-city" maxlength="15" required>
+        </div>
+      </div>
+
+      <p class="a-error" id="pix-error" role="alert"></p>
+      <div class="a-form-actions">
+        <button type="submit" class="a-btn a-btn--ink">Salvar Pix</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ABA: MESAS E QR -->
+  <div class="a-pane" id="tab-mesas">
+    <div class="a-toolbar">
+      <h2>Mesas e QR Code</h2>
+      <div class="a-toolbar-right">
+        <form id="tables-form" class="a-inline-form">
+          <label class="a-inline-label" for="tables-count">Quantidade de mesas</label>
+          <input class="f-input f-input--sm" id="tables-count" type="number" min="1" max="80" step="1">
+          <button type="submit" class="a-btn a-btn--ink a-btn--sm">Gerar</button>
+        </form>
+        <button type="button" class="a-btn a-btn--accent" id="print-tables-btn">Imprimir</button>
+      </div>
+      <p class="a-hint">Cada QR abre o cardápio já com o número da mesa: o pedido chega no quadro com "Mesa N", sem o cliente digitar nada. Cole em cada mesa (dica: plastifique).</p>
+      <p class="a-hint" id="tables-hint"></p>
+    </div>
+    <div class="a-tables-grid" id="tables-grid"></div>
+  </div>
+
+  <!-- ABA: LOJA E EQUIPE -->
+  <div class="a-pane" id="tab-loja">
+    <div class="a-toolbar">
+      <h2>Horário de funcionamento</h2>
+      <span class="a-store-status" id="store-status-now"></span>
+    </div>
+    <form id="hours-form" class="a-card a-card--narrow">
+      <span class="f-label">Agora</span>
+      <div class="a-segmented" role="radiogroup" aria-label="Status da loja">
+        <label><input type="radio" name="statusManual" value="auto" checked><span>Seguir horários</span></label>
+        <label><input type="radio" name="statusManual" value="aberto"><span>Abrir agora</span></label>
+        <label><input type="radio" name="statusManual" value="fechado"><span>Fechar agora</span></label>
+      </div>
+      <p class="a-hint">"Abrir/Fechar agora" vale até você voltar para "Seguir horários". Útil em feriado, falta de produto ou fim de expediente antecipado.</p>
+
+      <span class="f-label">Dias e horários</span>
+      <div class="a-hours" id="hours-list"></div>
+      <p class="a-hint">Para fechar depois da meia-noite, coloque o fechamento menor que a abertura (ex.: 18:00 → 01:00).</p>
+      <div class="a-form-actions">
+        <button type="button" class="a-btn a-btn--sm" id="copy-hours-btn">Copiar segunda para todos os dias úteis</button>
+        <button type="submit" class="a-btn a-btn--ink">Salvar horários</button>
+      </div>
+    </form>
+
+    <div class="a-toolbar"><h2>WhatsApp da equipe</h2></div>
+    <form id="whats-form" class="a-card a-card--narrow">
+      <p class="a-hint">Cadastre um ou mais números (na demonstração pode deixar vazio: a mensagem aparece só em prévia). Os marcados com "Recebe pedidos" dividem os pedidos de entrega entre si (o cliente é enviado para um deles) e só esses aparecem no site; os demais ficam privados. O primeiro que recebe pedidos é o contato do rodapé do site.</p>
+      <div class="a-table-head a-whats-grid"><span>Nome</span><span>WhatsApp (com DDD)</span><span>Recebe pedidos</span><span></span></div>
+      <div id="whats-list"></div>
+      <p class="a-error" id="whats-error" role="alert"></p>
+      <div class="a-form-actions">
+        <button type="button" class="a-btn a-btn--sm" id="add-whats-btn">+ WhatsApp</button>
+        <button type="submit" class="a-btn a-btn--ink">Salvar WhatsApp</button>
+      </div>
+    </form>
+
+    <div class="a-toolbar"><h2>Dados da loja</h2></div>
+    <form id="store-form" class="a-card a-card--narrow">
+      <div class="a-grid-2">
+        <div>
+          <label class="f-label" for="store-name">Nome</label>
+          <input class="f-input" id="store-name" maxlength="40" required>
+        </div>
+        <div>
+          <label class="f-label" for="store-instagram">Instagram (link)</label>
+          <input class="f-input" id="store-instagram" type="url" maxlength="120" placeholder="https://instagram.com/…">
+        </div>
+      </div>
+      <label class="f-label" for="store-slogan">Frase do topo</label>
+      <input class="f-input" id="store-slogan" maxlength="80">
+      <label class="f-label" for="store-address">Endereço</label>
+      <input class="f-input" id="store-address" maxlength="120">
+      <div class="a-form-actions">
+        <button type="submit" class="a-btn a-btn--ink">Salvar dados</button>
+      </div>
+    </form>
+
+    <div class="a-toolbar"><h2>Administradores</h2></div>
+    <div class="a-card a-card--narrow">
+      <p class="a-hint">Na versão da sua loja você libera o acesso da equipe por e-mail, e cada pessoa entra com a própria senha. Na demonstração não há contas.</p>
+    </div>
+  </div>
+
+  <!-- ABA: RELATÓRIOS E DADOS -->
+  <div class="a-pane" id="tab-relatorios">
+    <div class="a-toolbar">
+      <h2>Desempenho</h2>
+      <div class="a-toolbar-right">
+        <div class="a-segmented a-segmented--sm" role="radiogroup" aria-label="Agrupar por">
+          <label><input type="radio" name="reportGroup" value="dia" checked><span>Por dia</span></label>
+          <label><input type="radio" name="reportGroup" value="semana"><span>Por dia da semana</span></label>
+        </div>
+        <select class="f-input f-input--sm" id="report-range" aria-label="Período">
+          <option value="7">Últimos 7 dias</option>
+          <option value="30" selected>Últimos 30 dias</option>
+          <option value="90">Últimos 90 dias</option>
+        </select>
+      </div>
+    </div>
+    <div class="a-kpis" id="report-kpis"></div>
+    <div class="a-insights" id="report-insights"></div>
+    <div class="a-charts">
+      <figure class="a-chart a-card" id="chart-revenue"></figure>
+      <figure class="a-chart a-card" id="chart-orders"></figure>
+    </div>
+    <details class="a-card a-report-table">
+      <summary>Ver tabela</summary>
+      <div id="report-table"></div>
+    </details>
+    <p class="a-hint">Faturamento = soma dos pedidos não cancelados (inclui taxa de entrega). Não é lucro: os custos dos produtos não são registrados no sistema.</p>
+
+    <div class="a-toolbar"><h2>Dados e privacidade</h2></div>
+    <div class="a-card a-card--narrow">
+      <p>Os pedidos guardam só apelido, mesa ou bairro, itens e valores. Endereço e telefone nunca chegam ao banco. Pedidos de exemplo dos últimos 45 dias já vêm na demonstração.</p>
+      <div class="a-privacy-summary" id="privacy-summary">Carregando…</div>
+
+      <div class="a-maint-row">
+        <div>
+          <strong>Apagar pedidos finalizados e cancelados</strong>
+          <span class="a-hint">Os totais do dia continuam no relatório (sem nenhum dado do cliente).</span>
+          <label class="a-inline-label">com mais de
+            <select class="f-input f-input--sm" id="purge-days">
+              <option value="0">0 dias (todos, inclusive de hoje)</option>
+              <option value="7">7 dias</option>
+              <option value="30" selected>30 dias</option>
+              <option value="90">90 dias</option>
+            </select>
+          </label>
+          <span class="a-hint" id="purge-preview">—</span>
+        </div>
+        <button type="button" class="a-btn a-btn--danger a-btn--sm" id="purge-orders-btn">Apagar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MODAL: PRODUTO ===== -->
+<dialog id="product-modal" class="a-modal">
+  <form id="product-form" method="dialog">
+    <header class="a-modal-head">
+      <h3 id="modal-title">Novo produto</h3>
+      <button type="button" class="a-icon-btn" data-close-modal aria-label="Fechar">✕</button>
+    </header>
+    <input type="hidden" id="product-id">
+
+    <div class="a-photo-field">
+      <div id="image-preview" class="a-photo-preview"><span>sem foto</span></div>
+      <div>
+        <label class="a-btn a-btn--sm" for="product-image">Escolher foto</label>
+        <input id="product-image" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+        <button type="button" class="a-btn a-btn--ghost a-btn--sm" id="remove-image-btn">Remover</button>
+        <p class="a-hint">A foto é reduzida e convertida em WebP antes de salvar (na demonstração ela fica só neste navegador).</p>
+      </div>
+    </div>
+
+    <label class="f-label" for="product-name">Nome</label>
+    <input class="f-input" id="product-name" type="text" maxlength="60" required>
+
+    <label class="f-label" for="product-description">Descrição</label>
+    <textarea class="f-input" id="product-description" rows="2" maxlength="160"></textarea>
+
+    <div class="a-grid-2">
+      <div>
+        <label class="f-label" for="product-category">Categoria</label>
+        <select class="f-input" id="product-category" required></select>
+      </div>
+      <div>
+        <label class="f-label" for="product-price">Preço (R$)</label>
+        <input class="f-input" id="product-price" type="number" step="0.10" min="0" required>
+      </div>
+    </div>
+
+    <span class="f-label">Tamanhos <small>(opcional; se preencher, substituem o preço acima)</small></span>
+    <div id="sizes-list"></div>
+    <button type="button" class="a-btn a-btn--sm" id="add-size-btn">+ Tamanho</button>
+
+    <span class="f-label">Escolhas do cliente <small>(ex.: ponto da carne, borda, tipo de leite, sabores)</small></span>
+    <div id="groups-list"></div>
+    <button type="button" class="a-btn a-btn--sm" id="add-group-btn">+ Grupo de escolhas</button>
+
+    <span class="f-label">Prato do dia <small>(marque os dias; sem marcar = todos os dias)</small></span>
+    <div class="a-days" id="product-days"></div>
+
+    <div class="a-checks">
+      <label class="a-switch"><input type="checkbox" id="product-half"><span>Permite meio a meio</span></label>
+      <label class="a-switch"><input type="checkbox" id="product-addons"><span>Aceita adicionais</span></label>
+      <label class="a-switch"><input type="checkbox" id="product-available" checked><span>Disponível</span></label>
+      <label class="a-switch"><input type="checkbox" id="product-featured"><span>Destaque</span></label>
+    </div>
+
+    <p class="a-error" id="product-error" role="alert"></p>
+    <div class="a-form-actions">
+      <button type="button" class="a-btn a-btn--ghost" data-close-modal>Cancelar</button>
+      <button type="submit" class="a-btn a-btn--ink" id="product-save-btn">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ===== MODAL: CATEGORIA ===== -->
+<dialog id="category-modal" class="a-modal a-modal--sm">
+  <form id="category-form" method="dialog">
+    <header class="a-modal-head">
+      <h3 id="category-modal-title">Nova categoria</h3>
+      <button type="button" class="a-icon-btn" data-close-modal aria-label="Fechar">✕</button>
+    </header>
+    <input type="hidden" id="category-id">
+    <label class="f-label" for="category-name">Nome</label>
+    <input class="f-input" id="category-name" maxlength="40" required>
+    <label class="f-label" for="category-order">Posição no cardápio</label>
+    <input class="f-input" id="category-order" type="number" step="1" min="0">
+    <div class="a-form-actions">
+      <button type="button" class="a-btn a-btn--danger a-btn--sm" id="category-delete-btn" hidden>Excluir</button>
+      <button type="submit" class="a-btn a-btn--ink">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<footer class="a-footer">Painel de demonstração · <span data-niche-name></span><br><span class="credit">Desenvolvido por <strong>LP Studio</strong></span></footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="../js/config.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/precos.js"></script>
+<script src="../js/demo-backend.js"></script>
+<script src="../js/demo-servidor.js"></script>
+<script src="../js/demo-ui.js"></script>
+<script src="../js/qr.js"></script>
+<script src="../js/admin/admin-auth.js"></script>
+<script src="../js/admin/admin-orders.js"></script>
+<script src="../js/admin/admin-products.js"></script>
+<script src="../js/admin/admin-addons.js"></script>
+<script src="../js/admin/admin-delivery.js"></script>
+<script src="../js/admin/admin-mesas.js"></script>
+<script src="../js/admin/admin-store.js"></script>
+<script src="../js/admin/admin-reports.js"></script>
+</body>
+</html>

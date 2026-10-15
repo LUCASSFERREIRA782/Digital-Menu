@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ponto Expresso — Cardápio Digital</title>
+<meta name="description" content="Cardápio digital de exemplo.">
+<meta name="theme-color" content="#1F2A24">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<!-- Política de segurança: só arquivos deste site, fontes do Google e a consulta de CEP. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://viacep.com.br https://brasilapi.com.br; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'">
+<!-- Não deixa outro site exibir o cardápio dentro de um iframe (clickjacking). -->
+<script src="js/frame-guard.js"></script>
+<!-- Define o nicho (cores e textos) antes de pintar a página -->
+<script src="js/nichos.js"></script>
+
+<meta property="og:title" content="Ponto Expresso — Cardápio Digital">
+<meta property="og:description" content="Peça na mesa, retire no balcão ou receba em casa.">
+<meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=DM+Mono:wght@400;500&family=Familjen+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<a class="skip-link" href="#cardapio">Pular para o cardápio</a>
+
+<!-- ========== TOPO ========== -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="#" class="brand" aria-label="Início">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="currentColor"/><path d="M12 22h16M20 10v4M14 22a6 6 0 0 1 12 0" stroke="var(--ink)" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+      </span>
+      <span class="brand-name" data-brand-name>Ponto Expresso</span>
+    </a>
+    <span class="open-sticker" data-open-status hidden></span>
+  </div>
+</header>
+
+<!-- ========== HERO (texto + cena 3D do nicho) ========== -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-stage" id="hero-stage"></div>
+    <div class="hero-copy">
+      <p class="hero-kicker" data-slogan></p>
+      <h1 class="hero-title" data-hero-title></h1>
+      <ul class="hero-tags" data-hero-tags aria-label="Como funciona"></ul>
+    </div>
+  </div>
+  <svg class="hero-drip" viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 0h1200v18c-40 0-52 34-80 34s-30-26-62-26-38 40-74 40-40-30-70-30-34 16-64 16-44-34-84-34-30 22-60 22-44-28-90-28-34 36-70 36-38-20-66-20-46 30-86 30S302 22 262 22s-34 30-70 30-40-34-78-34S70 40 40 40 12 18 0 18z" fill="var(--ink)"/>
+  </svg>
+</section>
+
+<!-- Aviso da mesa (quando o cliente vem pelo QR Code da mesa) -->
+<div class="table-wrap">
+  <p class="table-banner" id="table-banner" hidden>
+    <span>Você está na</span> <strong>Mesa <span data-table-number></span></strong>
+    <span>· o pedido vai direto para a cozinha</span>
+  </p>
+</div>
+
+<!-- ========== NAV DE CATEGORIAS ========== -->
+<nav class="cat-nav" id="category-nav" aria-label="Categorias do cardápio">
+  <div class="cat-nav-track"></div>
+</nav>
+
+<main id="cardapio">
+  <section class="featured" id="destaques" hidden>
+    <h2 class="section-title"><span>Os mais pedidos</span></h2>
+    <div class="featured-track"></div>
+  </section>
+
+  <div id="menu-categories" aria-live="polite">
+    <div class="loading-blob" role="status"><span></span>Preparando o cardápio…</div>
+  </div>
+
+  <!-- ========== INFORMAÇÕES ========== -->
+  <section class="info" id="info">
+    <h2 class="section-title"><span>Onde estamos</span></h2>
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>Endereço</h3>
+        <p data-address></p>
+      </div>
+      <div class="info-card">
+        <h3>Horários</h3>
+        <dl class="hours" data-hours-list></dl>
+      </div>
+      <div class="info-card info-card--ink">
+        <h3>Como pagar</h3>
+        <p><strong>Entrega:</strong> Pix ou maquininha na porta.</p>
+        <p><strong>Mesa e balcão:</strong> cartão ou Pix direto no caixa.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <span class="footer-brand" data-brand-name>Ponto Expresso</span>
+  <nav class="footer-links" aria-label="Contato">
+    <a href="#" data-whats-link target="_blank" rel="noopener" hidden>WhatsApp</a>
+    <a href="#" data-instagram-link target="_blank" rel="noopener" hidden>Instagram</a>
+  </nav>
+  <p class="fine">Cardápio de demonstração (<span data-niche-name></span>) com dados fictícios. Não guardamos endereço, telefone nem dados de pagamento.</p>
+  <p class="credit">Desenvolvido por <strong>LP Studio</strong></p>
+</footer>
+
+<!-- ========== BARRA DO PEDIDO ========== -->
+<div class="order-bar" id="order-bar" aria-live="polite"></div>
+
+<!-- ========== SHEET (produto / comanda / confirmação) ========== -->
+<div class="sheet-overlay" id="sheet-overlay" aria-hidden="true">
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Detalhes" tabindex="-1"></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/precos.js"></script>
+<script src="js/demo-backend.js"></script>
+<script src="js/demo-servidor.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/cart.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/checkout.js"></script>
+<script src="js/hero3d.js"></script>
+<script src="js/hero-foto.js"></script>
+<script src="js/demo-ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

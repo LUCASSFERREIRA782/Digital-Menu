@@ -1,0 +1,125 @@
+/**
+ * tokens.css — Design System "Comanda"
+ * -------------------------------------------------------
+ * Mesmo conceito do cardápio da açaiteria: papel de comanda,
+ * bordas grossas e sombras "carimbadas" (deslocadas, sem
+ * desfoque). Cada nicho troca SÓ as cores e a fonte de
+ * título, pelo atributo data-nicho no <html>.
+ *
+ * Regra: nenhum outro arquivo usa cor/medida literal — só
+ * estes tokens. Todas as combinações de cor foram conferidas
+ * para contraste de leitura (texto ≥ 4,5:1).
+ * -------------------------------------------------------
+ */
+
+:root {
+  /* ---- Cor (Restaurante = padrão) ---- */
+  --ink:        #1F2A24;   /* texto, bordas, fundos fortes */
+  --ink-soft:   #4A5650;   /* texto secundário */
+  --brand:      #8C3B1F;   /* superfícies de marca */
+  --paper:      #F4EFE6;   /* fundo principal (papel de comanda) */
+  --paper-deep: #E7DECF;   /* faixas e campos */
+  --white:      #FFFDF9;   /* cartões */
+  --accent:     #E8A93B;   /* destaque, preço, CTA secundário (texto escuro em cima) */
+  --danger:     #B8392A;   /* alerta, esgotado, cancelar */
+  --ok:         #3E6B4A;   /* aberto, pago, sucesso */
+  --on-ink:     #FBF7EF;   /* texto sobre fundos escuros */
+
+  /* ---- Tipografia ---- */
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --display-weight: 650;
+  --font-body:    "Familjen Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    "DM Mono", ui-monospace, "Cascadia Mono", monospace;
+
+  --fs-xs:   0.75rem;
+  --fs-sm:   0.875rem;
+  --fs-md:   1rem;
+  --fs-lg:   1.1875rem;
+  --fs-xl:   1.5rem;
+  --fs-2xl:  2rem;
+  --fs-hero: clamp(2.4rem, 7.5vw, 4.4rem);
+
+  /* ---- Espaço (escala de 4) ---- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+
+  /* ---- Forma ---- */
+  --line: 2px solid var(--ink);
+  --line-thin: 1.5px dashed color-mix(in srgb, var(--ink) 35%, transparent);
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+  --r-blob: 42% 58% 55% 45% / 48% 42% 58% 52%;
+
+  /* ---- Sombras carimbadas ---- */
+  --stamp-sm: 2px 2px 0 var(--ink);
+  --stamp:    4px 4px 0 var(--ink);
+  --stamp-lg: 6px 6px 0 var(--ink);
+
+  /* ---- Movimento ---- */
+  --ease-squish: cubic-bezier(.34, 1.56, .64, 1);
+  --t-fast: 120ms;
+  --t-mid: 240ms;
+
+  /* ---- Layout ---- */
+  --page-max: 1080px;
+  --gutter: 16px;
+  --header-h: 60px;
+  --nav-h: 56px;
+}
+
+/* ---------- Paletas por nicho ---------- */
+[data-nicho="pizzaria"] {
+  --ink: #2B1510; --ink-soft: #5E433B; --brand: #B3261E;
+  --paper: #FBF3E4; --paper-deep: #F0E1C6; --white: #FFFCF6;
+  --accent: #F2C14E; --danger: #A8321E; --ok: #3F7A3A; --on-ink: #FFF8EC;
+}
+[data-nicho="hamburgueria"] {
+  --ink: #1A1A1A; --ink-soft: #4D4A45; --brand: #C23E15;
+  --paper: #FFF6E9; --paper-deep: #F6E4C8; --white: #FFFCF7;
+  --accent: #FFC93C; --danger: #B3261E; --ok: #3F7A33; --on-ink: #FFF8EE;
+  --font-display: "Bagel Fat One", "Arial Black", system-ui, sans-serif; --display-weight: 400;
+}
+[data-nicho="japones"] {
+  --ink: #161A1F; --ink-soft: #4A5058; --brand: #B5342A;
+  --paper: #F6F1EA; --paper-deep: #E9E1D4; --white: #FFFDF9;
+  --accent: #F4A27B; --danger: #A62F25; --ok: #4F7A55; --on-ink: #FAF6F0;
+}
+[data-nicho="cafeteria"] {
+  --ink: #2B1D16; --ink-soft: #5C4A40; --brand: #6F4E37;
+  --paper: #F5EFE6; --paper-deep: #E8DCCB; --white: #FFFCF8;
+  --accent: #D9A066; --danger: #A83A2C; --ok: #4E6B47; --on-ink: #FBF6EF;
+}
+[data-nicho="doceria"] {
+  --ink: #3A1730; --ink-soft: #6B4A60; --brand: #B83E68;
+  --paper: #FFF4F4; --paper-deep: #F8E1E4; --white: #FFFDFD;
+  --accent: #F9B8CC; --danger: #A8322B; --ok: #4D7A5A; --on-ink: #FFF7F9;
+  --font-display: "Bagel Fat One", "Arial Black", system-ui, sans-serif; --display-weight: 400;
+}
+[data-nicho="pastelaria"] {
+  --ink: #2A2110; --ink-soft: #5B4F38; --brand: #A85A1B;
+  --paper: #FFF8E6; --paper-deep: #F5E6BE; --white: #FFFDF5;
+  --accent: #F4C542; --danger: #B03A26; --ok: #3E7B3E; --on-ink: #FFF9EA;
+  --font-display: "Bagel Fat One", "Arial Black", system-ui, sans-serif; --display-weight: 400;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-fast: 0ms; --t-mid: 0ms; }
+}
+
+/* ---------- Ilustração de produto sem foto (por nicho) ---------- */
+:root                      { --img-fallback: url("../assets/ilustracoes/restaurante.svg"); }
+[data-nicho="pizzaria"]     { --img-fallback: url("../assets/ilustracoes/pizzaria.svg"); }
+[data-nicho="hamburgueria"] { --img-fallback: url("../assets/ilustracoes/hamburgueria.svg"); }
+[data-nicho="japones"]      { --img-fallback: url("../assets/ilustracoes/japones.svg"); }
+[data-nicho="cafeteria"]    { --img-fallback: url("../assets/ilustracoes/cafeteria.svg"); }
+[data-nicho="doceria"]      { --img-fallback: url("../assets/ilustracoes/doceria.svg"); }
+[data-nicho="pastelaria"]   { --img-fallback: url("../assets/ilustracoes/pastelaria.svg"); }

@@ -1,0 +1,68 @@
+[
+  {
+    "nicho": "restaurante",
+    "arquivo": "assets/hero/restaurante.webp",
+    "licenca": "CC0 1.0",
+    "licencaUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "fonte": "rawpixel",
+    "pagina": "https://www.rawpixel.com/image/5968383/steak-foie-gras",
+    "titulo": "Steak & Foie Gras",
+    "autor": null,
+    "baixadoEm": "2026-10-15T19:00:44.710Z"
+  },
+  {
+    "nicho": "pizzaria",
+    "arquivo": "assets/hero/pizzaria.webp",
+    "licenca": "CC0 1.0",
+    "licencaUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "fonte": "wordpress",
+    "pagina": "https://wordpress.org/photos/photo/914636e748/",
+    "titulo": "Pepperoni pizza cooked in a wood fire brick oven.",
+    "autor": "ChrisEdwardsCE",
+    "baixadoEm": "2026-10-15T19:00:45.079Z"
+  },
+  {
+    "nicho": "hamburgueria",
+    "arquivo": "assets/hero/hamburgueria.webp",
+    "licenca": "CC0 1.0",
+    "licencaUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "fonte": "stocksnap",
+    "pagina": "https://stocksnap.io/photo/food-burger-WYL5KWIPUD",
+    "titulo": "Food Burger",
+    "autor": "Eaters Collective",
+    "baixadoEm": "2026-10-15T19:00:45.188Z"
+  },
+  {
+    "nicho": "japones",
+    "arquivo": "assets/hero/japones.webp",
+    "licenca": "CC0 1.0",
+    "licencaUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "fonte": "stocksnap",
+    "pagina": "https://stocksnap.io/photo/sushi-sake-EZWO30D5TV",
+    "titulo": "Sushi Sake",
+    "autor": "Jamie Hamel-Smith",
+    "baixadoEm": "2026-10-15T19:00:45.268Z"
+  },
+  {
+    "nicho": "cafeteria",
+    "arquivo": "assets/hero/cafeteria.webp",
+    "licenca": "CC0 1.0",
+    "licencaUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "fonte": "stocksnap",
+    "pagina": "https://stocksnap.io/photo/coffee-cappuccino-UXO5P8KFS5",
+    "titulo": "Coffee Cappuccino",
+    "autor": "Hello Goodbye",
+    "baixadoEm": "2026-10-15T19:00:45.345Z"
+  },
+  {
+    "nicho": "doceria",
+    "arquivo": "assets/hero/doceria.webp",
+    "licenca": "CC0 1.0",
+    "licencaUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "fonte": "stocksnap",
+    "pagina": "https://stocksnap.io/photo/cupcake-dessert-GBQEG43QXW",
+    "titulo": "Cupcake Dessert",
+    "autor": "Foodie Girl",
+    "baixadoEm": "2026-10-15T19:00:45.447Z"
+  }
+]
