@@ -583,29 +583,6 @@ textarea.pix-code { width: 100%; resize: none; color: var(--ink); }
 .locked-field { padding: 11px 12px; background: var(--paper-deep); border: var(--line); border-radius: var(--r-sm); font-weight: 700; }
 
 /* ============ Modo demonstração ============ */
-.demo-pill {
-  position: fixed; right: var(--s-3); bottom: calc(var(--s-3) + env(safe-area-inset-bottom)); z-index: 45;
-  display: flex; align-items: center; gap: var(--s-2);
-  background: var(--white); color: var(--ink); border: var(--line); border-radius: var(--r-pill); box-shadow: var(--stamp-sm);
-  padding: 6px 6px 6px 12px; font-size: var(--fs-sm); font-weight: 700;
-  transition: transform var(--t-mid) var(--ease-squish);
-}
-body.has-order-bar .demo-pill { transform: translateY(calc(-1 * (72px + env(safe-area-inset-bottom)))); }
-.demo-pill-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
-.demo-pill button { border: var(--line); border-radius: var(--r-pill); background: var(--accent); padding: 4px 12px; font-weight: 700; }
-.demo-niches { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--s-2); margin-top: var(--s-4); }
-.demo-niche {
-  display: flex; flex-direction: column; gap: 2px; text-align: left; text-decoration: none;
-  padding: var(--s-3); background: var(--white); border: var(--line); border-radius: var(--r-md);
-  transition: transform var(--t-fast), box-shadow var(--t-fast);
-}
-.demo-niche:hover { transform: translate(-1px, -1px); box-shadow: var(--stamp-sm); }
-.demo-niche.is-current { background: var(--accent); box-shadow: var(--stamp-sm); }
-.demo-niche strong { font-size: var(--fs-md); }
-.demo-niche span { font-size: var(--fs-xs); color: var(--ink-soft); }
-.demo-actions { display: grid; gap: var(--s-2); margin-top: var(--s-5); }
-.demo-actions .btn { margin: 0; }
-.demo-note { font-size: var(--fs-sm); color: var(--ink-soft); margin: var(--s-4) 0 0; }
 .whats-preview {
   margin: var(--s-4) 0 0; padding: var(--s-3) var(--s-4); white-space: pre-wrap;
   background: color-mix(in srgb, var(--ok) 12%, var(--white)); border: var(--line); border-radius: var(--r-md);
@@ -615,7 +592,7 @@ body.has-order-bar .demo-pill { transform: translateY(calc(-1 * (72px + env(safe
 /* Fontes de título que só têm um peso */
 .brand-name, .feat-name, .footer-brand, .order-code { font-weight: var(--display-weight); }
 
-@media print { .demo-pill, .order-bar { display: none !important; } }
+@media print { .order-bar { display: none !important; } }
 
 /* Assinatura de quem desenvolveu */
 .credit { margin: var(--s-4) 0 0; font-family: var(--font-mono); font-size: var(--fs-xs); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }

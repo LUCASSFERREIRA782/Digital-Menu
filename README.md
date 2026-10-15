@@ -21,6 +21,20 @@ pedidos são fictícios. Desenvolvido por **LP Studio**.
   QR Code por mesa para imprimir, horários e relatórios (45 dias de exemplo).
 - `qr/gerador.html`: QR Code geral (balcão, vitrine, panfleto).
 
+## Troca de nicho (só pelo painel)
+
+- A página pública não tem botão de troca: o cliente vê só o cardápio.
+- No painel, a barra "Demonstração" troca o nicho com um clique. O nicho fica lembrado neste
+  aparelho e o cardápio aberto em outra aba muda na hora (BroadcastChannel).
+- O QR Code físico (sem `?nicho=`) abre o restaurante no celular do cliente; os QR Codes gerados
+  no painel levam o nicho escolhido.
+- A amostra começa "aberta agora" para dar para pedir a qualquer hora.
+
+## Atualizar o site
+
+A cada envio, troque a versão `?v=` nos links de `index.html`, `admin/index.html` e
+`qr/gerador.html`: o celular sempre baixa o conjunto novo (o GitHub Pages guarda arquivos por 10 min).
+
 ## Como a demonstração funciona (e por que é segura)
 
 - **Sem banco na nuvem:** tudo fica no navegador de quem usa (`js/demo-backend.js`).

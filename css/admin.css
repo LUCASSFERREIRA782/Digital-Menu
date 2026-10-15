@@ -317,3 +317,15 @@ textarea.f-input { resize: vertical; }
   .a-table-card { box-shadow: none; }
   .a-table-link { display: none; }
 }
+
+/* Troca de nicho com um clique */
+.a-niche-chips { display: flex; gap: var(--s-1); overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.a-niche-chips::-webkit-scrollbar { display: none; }
+.a-niche-chip {
+  flex: none; padding: 5px 12px; border: var(--line); border-radius: var(--r-pill);
+  background: var(--white); color: var(--ink); font-size: var(--fs-sm); font-weight: 700;
+  transition: transform var(--t-fast), box-shadow var(--t-fast);
+}
+.a-niche-chip:hover { transform: translate(-1px, -1px); box-shadow: var(--stamp-sm); }
+.a-niche-chip.is-active { background: var(--ink); color: var(--on-ink); }
+@media (max-width: 760px) { .a-demo-bar > span { flex-basis: 100%; } }

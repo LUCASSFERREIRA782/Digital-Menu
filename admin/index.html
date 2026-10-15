@@ -7,15 +7,15 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <!-- Política de segurança: só arquivos deste site e as fontes do Google. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'">
-<script src="../js/frame-guard.js"></script>
-<script src="../js/nichos.js"></script>
+<script src="../js/frame-guard.js?v=20261015d"></script>
+<script src="../js/nichos.js?v=20261015d"></script>
 <meta name="theme-color" content="#1F2A24">
 <title>Painel — Ponto Expresso</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=DM+Mono:wght@400;500&family=Familjen+Grotesk:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../css/tokens.css">
-<link rel="stylesheet" href="../css/admin.css">
+<link rel="stylesheet" href="../css/tokens.css?v=20261015d">
+<link rel="stylesheet" href="../css/admin.css?v=20261015d">
 </head>
 <body>
 
@@ -50,8 +50,9 @@
 
   <div class="a-demo-bar">
     <span><strong>Demonstração</strong> · dados só neste navegador</span>
-    <label class="a-inline-label">Nicho <select class="f-input f-input--sm" id="demo-niche" aria-label="Nicho da demonstração"></select></label>
+    <div class="a-niche-chips" id="demo-niches" role="radiogroup" aria-label="Nicho da demonstração"></div>
     <a class="a-btn a-btn--sm" id="demo-menu-link" href="../" target="_blank" rel="noopener">Abrir o cardápio ↗</a>
+    <a class="a-btn a-btn--sm" id="demo-table-link" href="../" target="_blank" rel="noopener">Ver como cliente na Mesa 7 ↗</a>
     <button type="button" class="a-btn a-btn--ghost a-btn--sm" id="demo-reset-btn">Restaurar exemplo</button>
   </div>
 
@@ -389,20 +390,20 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="../js/config.js"></script>
-<script src="../js/utils.js"></script>
-<script src="../js/precos.js"></script>
-<script src="../js/demo-backend.js"></script>
-<script src="../js/demo-servidor.js"></script>
-<script src="../js/demo-ui.js"></script>
-<script src="../js/qr.js"></script>
-<script src="../js/admin/admin-auth.js"></script>
-<script src="../js/admin/admin-orders.js"></script>
-<script src="../js/admin/admin-products.js"></script>
-<script src="../js/admin/admin-addons.js"></script>
-<script src="../js/admin/admin-delivery.js"></script>
-<script src="../js/admin/admin-mesas.js"></script>
-<script src="../js/admin/admin-store.js"></script>
-<script src="../js/admin/admin-reports.js"></script>
+<script src="../js/config.js?v=20261015d"></script>
+<script src="../js/utils.js?v=20261015d"></script>
+<script src="../js/precos.js?v=20261015d"></script>
+<script src="../js/demo-backend.js?v=20261015d"></script>
+<script src="../js/demo-servidor.js?v=20261015d"></script>
+<script src="../js/demo-ui.js?v=20261015d"></script>
+<script src="../js/qr.js?v=20261015d"></script>
+<script src="../js/admin/admin-auth.js?v=20261015d"></script>
+<script src="../js/admin/admin-orders.js?v=20261015d"></script>
+<script src="../js/admin/admin-products.js?v=20261015d"></script>
+<script src="../js/admin/admin-addons.js?v=20261015d"></script>
+<script src="../js/admin/admin-delivery.js?v=20261015d"></script>
+<script src="../js/admin/admin-mesas.js?v=20261015d"></script>
+<script src="../js/admin/admin-store.js?v=20261015d"></script>
+<script src="../js/admin/admin-reports.js?v=20261015d"></script>
 </body>
 </html>

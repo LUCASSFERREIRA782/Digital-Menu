@@ -19,7 +19,7 @@ async function renderMenu() {
 document.addEventListener("DOMContentLoaded", async () => {
   renderIdentity();
   setupGlobalEvents();
-  setupDemoUI();
+  seguirNichoDoPainel(); // o nicho só muda pelo painel (esta página não tem botão de troca)
   // Topo: foto real com profundidade; se falhar (sem WebGL, imagem fora), a cena desenhada
   const stage = document.getElementById("hero-stage");
   if (NICHO.foto) startPhoto3D(stage, NICHO.foto, () => startHero3D(stage, NICHO.cena));

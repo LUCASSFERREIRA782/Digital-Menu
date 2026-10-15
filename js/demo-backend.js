@@ -18,7 +18,7 @@
  * -------------------------------------------------------
  */
 
-const DEMO_KEY = `ponto-expresso-demo:v1:${NICHO_ID}`;
+const DEMO_KEY = `ponto-expresso-demo:v2:${NICHO_ID}`; // subir a versão recria a amostra para todos
 const DEMO_LIMITE_BYTES = 4_000_000; // fica abaixo da cota típica de 5 MB do localStorage
 
 /* ---------------- Valores especiais (datas e incrementos) ---------------- */

@@ -64,12 +64,24 @@ document.querySelectorAll("[data-close-modal]").forEach(btn =>
 
 const ts = () => firebase.firestore.FieldValue.serverTimestamp();
 
-/* ---------- Barra da demonstração: nicho, cardápio e restaurar ---------- */
+/* ---------- Barra da demonstração: nicho, cardápio e restaurar ----------
+ * Só o painel troca o nicho. Um clique: grava neste aparelho, avisa o
+ * cardápio aberto em outra aba (que muda na hora) e recarrega o painel
+ * com os dados daquele nicho (cada nicho tem cardápio e pedidos próprios).
+ */
 function initDemoAdmin() {
-  const sel = document.getElementById("demo-niche");
-  sel.innerHTML = Object.entries(NICHOS).map(([id, n]) => `<option value="${esc(id)}" ${id === NICHO_ID ? "selected" : ""}>${esc(n.nome)}</option>`).join("");
-  sel.addEventListener("change", () => { location.href = adminUrl(sel.value); });
+  escolherNicho(NICHO_ID); // o cardápio aberto neste aparelho segue o painel
+  const wrap = document.getElementById("demo-niches");
+  wrap.innerHTML = Object.entries(NICHOS).map(([id, n]) => `
+    <button type="button" class="a-niche-chip${id === NICHO_ID ? " is-active" : ""}" role="radio" aria-checked="${id === NICHO_ID}" data-niche="${esc(id)}">${esc(n.nome)}</button>`).join("");
+  wrap.addEventListener("click", e => {
+    const id = e.target.closest("[data-niche]")?.dataset.niche;
+    if (!id || id === NICHO_ID) return;
+    escolherNicho(id);
+    location.replace(adminUrl(id));
+  });
   document.getElementById("demo-menu-link").href = nichoUrl(NICHO_ID);
+  document.getElementById("demo-table-link").href = nichoUrl(NICHO_ID, "&mesa=7");
   document.getElementById("demo-reset-btn").addEventListener("click", () => {
     if (!confirm("Restaurar cardápio, configurações e pedidos de exemplo deste nicho? O que você mudou aqui será perdido.")) return;
     DemoStore.reset();

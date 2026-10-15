@@ -369,10 +369,20 @@ function PASTEL(medio, grande) {
   return [{ label: "Médio", price: medio }, { label: "Grande", price: grande }];
 }
 
-/** Nicho atual: ?nicho=… na URL (padrão: restaurante). */
+/**
+ * Nicho atual. Quem escolhe é o painel (barra "Demonstração"):
+ *   1. ?nicho=… no link (QR Codes e botões do painel levam o nicho);
+ *   2. senão, o último nicho escolhido no painel NESTE aparelho;
+ *   3. senão, restaurante (é o que o QR Code físico abre no celular do cliente).
+ */
+const NICHO_CHAVE = "ponto-expresso:nicho";
+const nichoValido = id => Boolean(id) && Object.prototype.hasOwnProperty.call(NICHOS, id);
 const NICHO_ID = (() => {
   const q = new URLSearchParams(location.search).get("nicho");
-  return q && Object.prototype.hasOwnProperty.call(NICHOS, q) ? q : "restaurante";
+  if (nichoValido(q)) return q;
+  let salvo = null;
+  try { salvo = localStorage.getItem(NICHO_CHAVE); } catch {}
+  return nichoValido(salvo) ? salvo : "restaurante";
 })();
 const NICHO = NICHOS[NICHO_ID];
 document.documentElement.dataset.nicho = NICHO_ID;

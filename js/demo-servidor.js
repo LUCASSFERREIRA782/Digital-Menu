@@ -159,7 +159,10 @@ function demoSeed() {
   cols.config.deliveryFees = { ativo: true, retirada: true, modo: "bairro", taxaFixa: 6, bairros: BAIRROS_EXEMPLO };
   cols.config.loja = {
     nome: restaurantConfig.name, slogan: NICHO.kicker, endereco: restaurantConfig.address,
-    instagram: "", horarios: NICHO.horarios, statusManual: "auto", whatsapps: [],
+    instagram: "", horarios: NICHO.horarios, whatsapps: [],
+    // Demonstração começa "aberta agora" para dar para pedir a qualquer hora na apresentação.
+    // Para mostrar o abre/fecha automático: painel → Loja e equipe → "Seguir horários".
+    statusManual: "aberto",
   };
   cols.config.equipe = { whatsapps: [] };
   cols.config.mesas = { quantidade: 12 };
