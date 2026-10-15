@@ -23,7 +23,8 @@ const MAX_LINHAS = 10, MAX_QTD = 20;
 function servidorFalha(msg, code = "invalid-argument") {
   throw Object.assign(new Error(msg), { code: `functions/${code}` });
 }
-const texto = (v, max) => String(v ?? "").trim().slice(0, max);
+// Só aceita texto ou número: objeto vindo da tela vira vazio (não "[object Object]")
+const texto = (v, max) => (typeof v === "string" || typeof v === "number" ? String(v).trim().slice(0, max) : "");
 
 function codigoPedido() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
